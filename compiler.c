@@ -171,7 +171,7 @@ static void number() {
     if (value <= UINT8_MAX && (truncated = (uint8_t)value) == value) {
         emitBytes(OP_BYTE_NUM, truncated);
     } else { 
-        emitConstant(value);
+        emitConstant(NUMBER_VAL(value));
     }
 }
 
