@@ -18,11 +18,14 @@ typedef enum {
     PREC_OR,          // or
     PREC_AND,         // and
     PREC_EQUALITY,    // == !=
+    // PREC_BIT_OR,      // |
+    // PREC_BIT_XOR,     // ^
+    // PREC_BIT_AND,     // &
     PREC_COMPARISON,  // < > <= >=
     PREC_SHIFT,       // << >>
     PREC_TERM,        // + -
     PREC_FACTOR,      // * /
-    PREC_UNARY,       // ! -
+    PREC_UNARY,       // ! - ~
     PREC_CALL,        // . ()
     PREC_PRIMARY
 } Precedence;
@@ -171,6 +174,7 @@ static void unary() {
 
     switch (operatorType) {
         case TOKEN_MINUS: emitByte(OP_NEGATE); break;
+        case TOKEN_TILDE: emitByte(OP_INVERT); break;
         default:
             return;
     }
@@ -188,6 +192,7 @@ ParseRule rules[] = {
     [TOKEN_SEMICOLON]       = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SLASH]           = {NULL,     binary, PREC_FACTOR},
     [TOKEN_STAR]            = {NULL,     binary, PREC_FACTOR},
+    [TOKEN_TILDE]           = {unary,    NULL,   PREC_UNARY},
     [TOKEN_BANG]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_BANG_EQUAL]      = {NULL,     NULL,   PREC_NONE},
     [TOKEN_EQUAL]           = {NULL,     NULL,   PREC_NONE},

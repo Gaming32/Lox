@@ -16,6 +16,7 @@ typedef enum {
     OP_SHIFT_RIGHT,
 
     OP_NEGATE,
+    OP_INVERT,
 
     OP_RETURN,
 } OpCode;

@@ -78,7 +78,8 @@ static InterpretResult run() {
             case OP_SHIFT_LEFT:  BIT_BINARY_OP(<<); break;
             case OP_SHIFT_RIGHT: BIT_BINARY_OP(>>); break;
 
-            case OP_NEGATE:   push(-pop()); break;
+            case OP_NEGATE:   push(-pop());     break;
+            case OP_INVERT:   push(-pop() - 1); break;
 
             case OP_RETURN: {
                 printValue(pop());
