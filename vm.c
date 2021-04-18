@@ -113,6 +113,23 @@ static InterpretResult run() {
             case OP_TRUE:  push(BOOL_VAL(true)); break;
             case OP_FALSE: push(BOOL_VAL(false)); break;
 
+            case OP_EQ: {
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VAL(valuesEqual(a, b)));
+                break;
+            }
+            case OP_NEQ: {
+                Value b = pop();
+                Value a = pop();
+                push(BOOL_VAL(valuesNotEqual(a, b)));
+                break;
+            }
+
+            case OP_GT:          BINARY_OP(BOOL_VAL, >); break;
+            case OP_LT:          BINARY_OP(BOOL_VAL, <); break;
+            case OP_LTE:         BINARY_OP(BOOL_VAL, <=); break;
+            case OP_GTE:         BINARY_OP(BOOL_VAL, >=); break;
             case OP_ADD:         BINARY_OP(NUMBER_VAL, +); break;
             case OP_SUBTRACT:    BINARY_OP(NUMBER_VAL, -); break;
             case OP_MULTIPLY:    BINARY_OP(NUMBER_VAL, *); break;

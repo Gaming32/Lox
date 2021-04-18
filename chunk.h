@@ -12,6 +12,13 @@ typedef enum {
     OP_TRUE,
     OP_FALSE,
 
+    OP_EQ,
+    OP_GT,
+    OP_LT,
+    OP_NEQ,
+    OP_GTE,
+    OP_LTE,
+
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
