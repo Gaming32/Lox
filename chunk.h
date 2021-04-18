@@ -7,6 +7,7 @@
 typedef enum {
     OP_CONSTANT,
     OP_CONSTANT_LONG,
+    OP_BYTE_NUM,
 
     OP_ADD,
     OP_SUBTRACT,

@@ -167,7 +167,12 @@ static void grouping() {
 
 static void number() {
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    uint8_t truncated;
+    if (value <= UINT8_MAX && (truncated = (uint8_t)value) == value) {
+        emitBytes(OP_BYTE_NUM, truncated);
+    } else { 
+        emitConstant(value);
+    }
 }
 
 static void unary() {

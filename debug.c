@@ -35,6 +35,12 @@ static int simpleInstruction(const char* name, int offset) {
     return offset + 1;
 }
 
+static int byteInstruction(const char* name, Chunk* chunk, int offset) {
+    uint8_t slot = chunk->code[offset + 1];
+    printf("%-16s %4d\n", name, slot);
+    return offset + 2; 
+}
+
 int disassembleInstruction(Chunk* chunk, int offset) {
     printf("%04d ", offset);
     if (offset > 0 && chunk->lines[offset] == chunk->lines[offset - 1]) {
@@ -49,6 +55,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return constantInstruction("OP_CONSTANT", chunk, offset);
         case OP_CONSTANT_LONG:
             return constantInstructionLong("OP_CONSTANT_LONG", chunk, offset);
+        case OP_BYTE_NUM:
+            return byteInstruction("OP_BYTE_NUM", chunk, offset);
 
         case OP_ADD:
             return simpleInstruction("OP_ADD", offset);

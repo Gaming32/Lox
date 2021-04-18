@@ -70,6 +70,11 @@ static InterpretResult run() {
                 push(constant);
                 break;
             }
+            case OP_BYTE_NUM: {
+                uint8_t integer = READ_BYTE();
+                push((double)integer);
+                break;
+            }
 
             case OP_ADD:         BINARY_OP(+);      break;
             case OP_SUBTRACT:    BINARY_OP(-);      break;
