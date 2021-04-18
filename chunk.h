@@ -14,6 +14,9 @@ typedef enum {
     OP_DIVIDE,
     OP_SHIFT_LEFT,
     OP_SHIFT_RIGHT,
+    OP_BIT_OR,
+    OP_BIT_XOR,
+    OP_BIT_AND,
 
     OP_NEGATE,
     OP_INVERT,

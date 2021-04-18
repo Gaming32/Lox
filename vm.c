@@ -77,6 +77,9 @@ static InterpretResult run() {
             case OP_DIVIDE:      BINARY_OP(/);      break;
             case OP_SHIFT_LEFT:  BIT_BINARY_OP(<<); break;
             case OP_SHIFT_RIGHT: BIT_BINARY_OP(>>); break;
+            case OP_BIT_AND:     BIT_BINARY_OP(&);  break;
+            case OP_BIT_OR:      BIT_BINARY_OP(|);  break;
+            case OP_BIT_XOR:     BIT_BINARY_OP(^);  break;
 
             case OP_NEGATE:   push(-pop());     break;
             case OP_INVERT:   push(-pop() - 1); break;

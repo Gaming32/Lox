@@ -18,9 +18,9 @@ typedef enum {
     PREC_OR,          // or
     PREC_AND,         // and
     PREC_EQUALITY,    // == !=
-    // PREC_BIT_OR,      // |
-    // PREC_BIT_XOR,     // ^
-    // PREC_BIT_AND,     // &
+    PREC_BIT_OR,      // |
+    PREC_BIT_XOR,     // ^
+    PREC_BIT_AND,     // &
     PREC_COMPARISON,  // < > <= >=
     PREC_SHIFT,       // << >>
     PREC_TERM,        // + -
@@ -152,6 +152,9 @@ static void binary() {
         case TOKEN_SLASH:           emitByte(OP_DIVIDE); break;
         case TOKEN_LESS_LESS:       emitByte(OP_SHIFT_LEFT); break;
         case TOKEN_GREATER_GREATER: emitByte(OP_SHIFT_RIGHT); break;
+        case TOKEN_AMPERSAND:       emitByte(OP_BIT_AND); break;
+        case TOKEN_PIPE:            emitByte(OP_BIT_OR); break;
+        case TOKEN_CARET:           emitByte(OP_BIT_XOR); break;
         default:
             return;
     }
@@ -192,6 +195,9 @@ ParseRule rules[] = {
     [TOKEN_SEMICOLON]       = {NULL,     NULL,   PREC_NONE},
     [TOKEN_SLASH]           = {NULL,     binary, PREC_FACTOR},
     [TOKEN_STAR]            = {NULL,     binary, PREC_FACTOR},
+    [TOKEN_AMPERSAND]       = {NULL,     binary, PREC_BIT_AND},
+    [TOKEN_PIPE]            = {NULL,     binary, PREC_BIT_OR},
+    [TOKEN_CARET]           = {NULL,     binary, PREC_BIT_XOR},
     [TOKEN_TILDE]           = {unary,    NULL,   PREC_UNARY},
     [TOKEN_BANG]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_BANG_EQUAL]      = {NULL,     NULL,   PREC_NONE},
