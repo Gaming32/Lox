@@ -77,9 +77,6 @@ static InterpretResult run() {
         long a = (long)AS_NUMBER(pop()); \
         push(NUMBER_VAL((double)(a op b))); \
     } while(false)
-        // long b = (long)pop(); 
-        // long a = (long)pop(); 
-        // push((double)(a op b)); 
 
     for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
