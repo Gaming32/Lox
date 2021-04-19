@@ -38,6 +38,13 @@ void printValue(Value value) {
     }
 }
 
+static bool stringCmp(Value a, Value b) {
+    ObjString* aString = AS_STRING(a);
+    ObjString* bString = AS_STRING(b);
+    return aString->length == bString->length &&
+        memcmp(aString->chars, bString->chars, aString->length) == 0;
+}
+
 bool valuesEqual(Value a, Value b) {
     if (a.type != b.type) return false;
 
@@ -45,6 +52,11 @@ bool valuesEqual(Value a, Value b) {
         case VAL_BOOL:   return AS_BOOL(a) == AS_BOOL(b);
         case VAL_NIL:    return true;
         case VAL_NUMBER: return AS_NUMBER(a) == AS_NUMBER(b);
+        case VAL_OBJ: {
+            if (IS_STRING(a) && IS_STRING(b)) {
+                return stringCmp(a, b);
+            }
+        }
         default:
             return false;
     }
@@ -57,6 +69,11 @@ bool valuesNotEqual(Value a, Value b) {
         case VAL_BOOL:   return AS_BOOL(a) != AS_BOOL(b);
         case VAL_NIL:    return false;
         case VAL_NUMBER: return AS_NUMBER(a) != AS_NUMBER(b);
+        case VAL_OBJ: {
+            if (IS_STRING(a) && IS_STRING(b)) {
+                return !stringCmp(a, b);
+            }
+        }
         default:
             return true;
     }
