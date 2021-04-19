@@ -15,15 +15,8 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    strategy:
-      matrix:
-        # and run on both Linux and Windows
-        os: [ubuntu-latest, windows-latest]
-
-    # The type of runner that the job will run on
-    runs-on: ${{ matrix.os }}
+  build-ubuntu:
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -36,4 +29,20 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Compile CLox
-        run: gcc *.c
+        run: gcc *.c -o clox
+        
+  build-windows:
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Install MinGW
+        uses: egor-tensin/setup-mingw@v2
+
+      # Runs a set of commands using the runners shell
+      - name: Compile CLox
+        run: gcc *.c -o clox.exe
