@@ -1,2 +1,4 @@
 var hello = "world";
 print hello;
+hello = "banana";
+print hello;

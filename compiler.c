@@ -134,13 +134,17 @@ static uint16_t makeConstant(Value value) {
     return (uint16_t)constant;
 }
 
+static void emitConstantOperator(uint16_t id, OpCode shortCode, OpCode longCode) {
+    if (id <= UINT8_MAX) {
+        emitBytes(shortCode, (uint8_t)id);
+    } else {
+        emitLongBytes(longCode, id);
+    }
+}
+
 static void emitConstant(Value value) {
     uint16_t constant = makeConstant(value);
-    if (constant <= UINT8_MAX) {
-        emitBytes(OP_CONSTANT, (uint8_t)constant);
-    } else {
-        emitLongBytes(OP_CONSTANT_LONG, constant);
-    }
+    emitConstantOperator(constant, OP_CONSTANT, OP_CONSTANT_LONG);
 }
 
 static void endCompiler() {
@@ -152,6 +156,11 @@ static void statement();
 static void declaration();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
+
+static uint16_t identifierConstant(Token* name) {
+    uint16_t constant = makeConstant(OBJ_VAL(copyString(name->start, name->length)));
+    return constant;
+}
 
 static void binary() {
     TokenType operatorType = parser.previous.type;
@@ -212,6 +221,21 @@ static void string() {
                                     parser.previous.length - 2)));
 }
 
+static void namedVariable(Token name) {
+    uint16_t arg = identifierConstant(&name);
+
+    if (match(TOKEN_EQUAL)) {
+        expression();
+        emitConstantOperator(arg, OP_SET_GLOBAL, OP_SET_GLOBAL_LONG);
+    } else {
+        emitConstantOperator(arg, OP_GET_GLOBAL, OP_GET_GLOBAL_LONG);
+    }
+}
+
+static void variable() {
+    namedVariable(parser.previous);
+}
+
 static void unary() {
     TokenType operatorType = parser.previous.type;
 
@@ -252,7 +276,7 @@ ParseRule rules[] = {
     [TOKEN_LESS]            = {NULL,     binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL]      = {NULL,     binary, PREC_COMPARISON},
     [TOKEN_LESS_LESS]       = {NULL,     binary, PREC_SHIFT},
-    [TOKEN_IDENTIFIER]      = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_IDENTIFIER]      = {variable, NULL,   PREC_NONE},
     [TOKEN_STRING]          = {string,   NULL,   PREC_NONE},
     [TOKEN_NUMBER]          = {number,   NULL,   PREC_NONE},
     [TOKEN_AND]             = {NULL,     NULL,   PREC_NONE},
@@ -292,6 +316,15 @@ static void parsePrecedence(Precedence precedence) {
     }
 }
 
+static uint16_t parseVariable(const char* errorMessage) {
+    consume(TOKEN_IDENTIFIER, errorMessage);
+    return identifierConstant(&parser.previous);
+}
+
+static void defineVariable(uint16_t global) {
+    emitConstantOperator(global, OP_DEFINE_GLOBAL, OP_DEFINE_GLOBAL_LONG);
+}
+
 static ParseRule* getRule(TokenType type) {
     return &rules[type];
 }
@@ -300,19 +333,70 @@ static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
 }
 
+static void varDeclaration() {
+    uint8_t global = parseVariable("Expect variable name.");
+
+    if (match(TOKEN_EQUAL)) {
+        expression();
+    } else {
+        emitByte(OP_NIL);
+    }
+    consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration");
+
+    defineVariable(global);
+}
+
+static void expressionStatement() {
+    expression();
+    consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
+    emitByte(OP_POP);
+}
+
 static void printStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
     emitByte(OP_PRINT);
 }
 
+static void synchronize() {
+    parser.panicMode = false;
+
+    while (parser.current.type != TOKEN_EOF) {
+        if (parser.previous.type == TOKEN_SEMICOLON) return;
+
+        switch (parser.current.type) {
+            case TOKEN_CLASS:
+            case TOKEN_FUN:
+            case TOKEN_VAR:
+            case TOKEN_FOR:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_PRINT:
+            case TOKEN_RETURN:
+                return;
+
+            default:;
+        }
+
+        advance();
+    }
+}
+
 static void declaration() {
-    statement();
+    if (match(TOKEN_VAR)) {
+        varDeclaration();
+    } else {
+        statement();
+    }
+
+    if (parser.panicMode) synchronize();
 }
 
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else {
+        expressionStatement();
     }
 }
 
