@@ -95,8 +95,8 @@ static InterpretResult run() {
             runtimeError("Operands must be numbers."); \
             return INTERPRET_RUNTIME_ERROR; \
         } \
-        long b = (long)AS_NUMBER(pop()); \
-        long a = (long)AS_NUMBER(pop()); \
+        int64_t b = (int64_t)AS_NUMBER(pop()); \
+        int64_t a = (int64_t)AS_NUMBER(pop()); \
         push(NUMBER_VAL((double)(a op b))); \
     } while(false)
 
