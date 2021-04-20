@@ -33,6 +33,8 @@ typedef enum {
     OP_INVERT,
     OP_NOT,
 
+    OP_PRINT,
+    
     OP_RETURN,
 } OpCode;
 

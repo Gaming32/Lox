@@ -1,14 +1,2 @@
-print 5 + 10 * 20; // Should result in 205
-
-// Comment-only line
-
-print "Hello world!";
-var myVar_39 = "Loooong
-
-string
-";
-
-print myVar_39;
-
-
-var class = "banana world";
+var hello = "world";
+print hello;
