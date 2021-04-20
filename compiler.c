@@ -267,7 +267,7 @@ static void parsePrecedence(Precedence precedence) {
     advance();
     ParseFn prefixRule = getRule(parser.previous.type)->prefix;
     if (prefixRule == NULL) {
-        error("Expect expression");
+        error("Expect expression.");
         return;
     }
 
@@ -297,7 +297,7 @@ bool compile(const char* source, Chunk* chunk) {
 
     advance();
     expression();
-    consume(TOKEN_EOF, "Expecte end of expression.");
+    consume(TOKEN_EOF, "Expected end of expression.");
     endCompiler();
     return !parser.hadError;
 }
