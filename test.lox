@@ -1,6 +1,9 @@
 var a = "bello";
-if (1) {
+if (0) {
     var a = "hello";
+    print a;
+} else {
+    var a = "yello";
     print a;
 }
 print a;
