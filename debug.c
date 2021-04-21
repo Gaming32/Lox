@@ -128,6 +128,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
 
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset);
+        case OP_JUMP_BACKWARDS:
+            return jumpInstruction("OP_JUMP_BACKWARDS", -1, chunk, offset);
         case OP_JUMP_IF_FALSE:
             return jumpInstruction("OP_JUMP_IF_FALSE", 1, chunk, offset);
         case OP_JUMP_IF_TRUE:
