@@ -1,9 +1,11 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "object.h"
 #include "memory.h"
 #include "value.h"
+#include "utils.h"
 
 void initValueArray(ValueArray* array) {
     array->values = NULL;
@@ -27,14 +29,22 @@ void freeValueArray(ValueArray* array) {
     initValueArray(array);
 }
 
-void printValue(Value value) {
+int stringifyValue(char** result, Value value) {
     switch (value.type) {
         case VAL_BOOL:
-            printf(AS_BOOL(value) ? "true" : "false");
-            break;
-        case VAL_NIL: printf("nil"); break;
-        case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
-        case VAL_OBJ: printObject(value); break;
+            return asprintf(result, AS_BOOL(value) ? "true" : "false");
+        case VAL_NIL: return asprintf(result, "nil");
+        case VAL_NUMBER: return asprintf(result, "%g", AS_NUMBER(value));
+        case VAL_OBJ: return stringifyObject(result, value);
+    }
+}
+
+void printValue(Value value) {
+    char* result;
+    int length = stringifyValue(&result, value);
+    if (length != -1) {
+        printf("%s", result);
+        free(result);
     }
 }
 

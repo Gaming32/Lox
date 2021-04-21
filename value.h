@@ -56,6 +56,7 @@ bool valuesNotEqual(Value a, Value b);
 void initValueArray(ValueArray* array);
 void writeValueArray(ValueArray* array, Value value);
 void freeValueArray(ValueArray* array);
+int stringifyValue(char** result, Value value);
 void printValue(Value value);
 
 #endif

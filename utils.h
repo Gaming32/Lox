@@ -7,5 +7,6 @@
     (((uint16_t)(a) << 8) | (b))
 
 uint16_t decode16pointer(uint8_t* ptr);
+int asprintf(char **strp, const char *fmt, ...);
 
 #endif
