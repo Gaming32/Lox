@@ -39,6 +39,8 @@ typedef enum {
     OP_GET_GLOBAL_LONG,
     OP_SET_GLOBAL,
     OP_SET_GLOBAL_LONG,
+    OP_GET_LOCAL,
+    OP_SET_LOCAL,
 
     OP_PRINT,
     OP_POP,

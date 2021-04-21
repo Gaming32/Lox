@@ -180,7 +180,7 @@ static InterpretResult run() {
 
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(0))) {
-                    runtimeError("Operand must be a number");
+                    runtimeError("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -188,7 +188,7 @@ static InterpretResult run() {
                 break;
             case OP_INVERT:
                 if (!IS_NUMBER(peek(0))) {
-                    runtimeError("Operand must be a number");
+                    runtimeError("Operand must be a number.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
@@ -246,6 +246,16 @@ static InterpretResult run() {
                     runtimeError("Undefined variable '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
+                break;
+            }
+            case OP_GET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                push(vm.stack[slot]);
+                break;
+            }
+            case OP_SET_LOCAL: {
+                uint8_t slot = READ_BYTE();
+                vm.stack[slot] = peek(0);
                 break;
             }
 
