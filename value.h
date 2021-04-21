@@ -11,6 +11,10 @@ typedef enum {
     VAL_NIL,
     VAL_NUMBER,
     VAL_OBJ,
+
+    // These are for the compiler and internal things
+    // and will never be seen by the user
+    VAL_INT,
 } ValueType;
 
 typedef struct {
@@ -19,6 +23,7 @@ typedef struct {
         bool boolean;
         double number;
         Obj* obj;
+        long integer;
     } as;
 } Value;
 
@@ -35,6 +40,10 @@ typedef struct {
 #define NIL_VAL           ((Value){VAL_NIL, {.boolean = false}})
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
 #define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+
+#define IS_INT(value)     ((value).type == VAL_INT)
+#define AS_INT(value)     ((value).as.integer)
+#define INT_VAL(value)    ((Value){VAL_INT, {.integer = (int)value}})
 
 typedef struct {
     int capacity;
