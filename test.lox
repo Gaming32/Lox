@@ -1,4 +1,6 @@
-var hello = "world";
-print hello;
-hello = "banana";
-print hello;
+var a = "bello";
+if (1) {
+    var a = "hello";
+    print a;
+}
+print a;

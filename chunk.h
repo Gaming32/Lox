@@ -42,6 +42,9 @@ typedef enum {
     OP_GET_LOCAL,
     OP_SET_LOCAL,
 
+    OP_JUMP,
+    OP_JUMP_IF_FALSE,
+
     OP_PRINT,
     OP_POP,
     OP_RETURN,
