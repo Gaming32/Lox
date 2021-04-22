@@ -10,7 +10,7 @@ uint16_t decode16pointer(uint8_t* ptr) {
 
 int vasprintf(char **strp, const char *fmt, va_list ap) {
     int length = vsnprintf(NULL, 0, fmt, ap);
-    char* result = malloc(length);
+    char* result = malloc(length + 1);
     if (result == NULL) {
         fprintf(stderr, "ERROR: Could not allocate string of length %d", length);
         return -1;

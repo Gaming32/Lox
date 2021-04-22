@@ -1,5 +1,10 @@
-for (;;) {
-    // continue;
-    print "hello";
-    break;
+// fun square(a) {
+//     return a * a;
+// }
+
+// print square(11);
+
+for (var a = 0; a < 3; a = a + 1) {
+    if (a == 1) continue;
+    print a;
 }

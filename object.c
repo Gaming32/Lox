@@ -20,6 +20,15 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+ObjFunction* newFunction() {
+    ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
+
+    function->arity = 0;
+    function->name = NULL;
+    initChunk(&function->chunk);
+    return function;
+}
+
 static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
     string->length = length;
@@ -65,9 +74,19 @@ ObjString* copyString(const char* chars, int length) {
     return allocateString(heapChars, length, hash);
 }
 
+static int stringifyFunction(char** result, ObjFunction* function) {
+    if (function->name == NULL) {
+        return asprintf(result, "<script>");
+    }
+    return asprintf(result, "<fun %s>", function->name->chars);
+}
+
 int stringifyObject(char** result, Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_FUNCTION:
+            return stringifyFunction(result, AS_FUNCTION(value));
         case OBJ_STRING:
             return asprintf(result, "%s", AS_CSTRING(value));
     }
+    return -1;
 }

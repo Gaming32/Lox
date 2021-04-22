@@ -36,7 +36,9 @@ int stringifyValue(char** result, Value value) {
         case VAL_NIL: return asprintf(result, "nil");
         case VAL_NUMBER: return asprintf(result, "%g", AS_NUMBER(value));
         case VAL_OBJ: return stringifyObject(result, value);
+        case VAL_INT: return asprintf(result, "<internal int %d>", AS_INT(value));
     }
+    return -1;
 }
 
 void printValue(Value value) {

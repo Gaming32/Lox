@@ -56,7 +56,15 @@ typedef struct {
     int breakCount;
 } Loop;
 
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT,
+} FunctionType;
+
 typedef struct {
+    ObjFunction* function;
+    FunctionType type;
+
     Local locals[UINT8_COUNT];
     Loop loops[UINT8_COUNT];
     Loop* loopTop;
@@ -72,7 +80,7 @@ Compiler* current = NULL;
 Chunk* compilingChunk;
 
 static Chunk* currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 static void errorAt(Token* token, const char* message) {
@@ -212,23 +220,34 @@ static void patchJump(int offset) {
     currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
-static void initCompiler(Compiler* compiler) {
+static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->function = NULL;
+    compiler->type = type;
     initTable(&compiler->strings);
-    compiler->loopTop = &compiler->loops[0];
+    compiler->loopTop = &compiler->loops[-1];
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->function = newFunction();
     current = compiler;
+
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
-static void endCompiler() {
+static ObjFunction* endCompiler() {
     emitReturn();
     freeTable(&current->strings);
+    ObjFunction* function = current->function;
 
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
-        disassembleChunk(currentChunk(), "code");
+        disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
     }
 #endif
+
+    return function;
 }
 
 static void beginScope() {
@@ -544,9 +563,9 @@ static void varDeclaration() {
 }
 
 static void pushLoop(int loopStart) {
+    current->loopTop++;
     current->loopTop->start = loopStart;
     current->loopTop->breakCount = 0;
-    current->loopTop++;
 }
 
 static void popLoop() {
@@ -575,7 +594,6 @@ static void forStatement() {
     }
 
     int loopStart = currentChunk()->count;
-    pushLoop(loopStart);
 
     int exitJump = -1;
     if (!match(TOKEN_SEMICOLON)) {
@@ -598,12 +616,12 @@ static void forStatement() {
         loopStart = incrementStart;
         patchJump(bodyJump);
     }
+    pushLoop(loopStart);
 
     statement();
 
-    emitLoop(loopStart);
-
     popLoop();
+    emitLoop(loopStart);
     if (exitJump != -1) {
         patchJump(exitJump);
         emitByte(OP_POP);
@@ -613,8 +631,8 @@ static void forStatement() {
 }
 
 static void breakStatement() {
-    if (current->loopTop == &current->loops[0]) { // No loops
-        error("No loop to continue to top of.");
+    if (current->loopTop < &current->loops[0]) { // No loops
+        error("No loop to break out of.");
     }
     current->loopTop->breakStmts[current->loopTop->breakCount++] = emitJump(OP_JUMP);
     consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
@@ -622,7 +640,7 @@ static void breakStatement() {
 }
 
 static void continueStatement() {
-    if (current->loopTop == &current->loops[0]) { // No loops
+    if (current->loopTop < &current->loops[0]) { // No loops
         error("No loop to continue to top of.");
     }
     emitLoop(current->loopTop->start);
@@ -730,11 +748,10 @@ static void statement() {
     }
 }
 
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source) {
     initScanner(source);
     Compiler compiler;
-    initCompiler(&compiler);
-    compilingChunk = chunk;
+    initCompiler(&compiler, TYPE_SCRIPT);
 
     parser.hadError = false;
     parser.panicMode = false;
@@ -745,6 +762,6 @@ bool compile(const char* source, Chunk* chunk) {
         declaration();
     }
 
-    endCompiler();
-    return !parser.hadError;
+    ObjFunction* function = endCompiler();
+    return parser.hadError ? NULL : function;
 }
