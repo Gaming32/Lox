@@ -539,6 +539,13 @@ static void pushLoop(int loopStart) {
     current->loopTop++;
 }
 
+static void popLoop() {
+    for (int i = 0; i < current->loopTop->breakCount; i++) {
+        patchJump(current->loopTop->breakStmts[i]);
+    }
+    current->loopTop--;
+}
+
 static void expressionStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
@@ -593,6 +600,15 @@ static void forStatement() {
     endScope();
 }
 
+static void breakStatement() {
+    if (current->loopTop == &current->loops[0]) { // No loops
+        error("No loop to continue to top of.");
+    }
+    current->loopTop->breakStmts[current->loopTop->breakCount++] = emitJump(OP_JUMP);
+    consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+    parser.panicMode = false;
+}
+
 static void continueStatement() {
     if (current->loopTop == &current->loops[0]) { // No loops
         error("No loop to continue to top of.");
@@ -642,9 +658,8 @@ static void whileStatement() {
     emitLoop(loopStart);
 
     patchJump(exitJump);
+    popLoop();
     emitByte(OP_POP);
-
-    current->loopTop--;
 }
 
 static void synchronize() {
@@ -684,6 +699,8 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_BREAK)) {
+        breakStatement();
     } else if (match(TOKEN_CONTINUE)) {
         continueStatement();
     } else if (match(TOKEN_FOR)) {

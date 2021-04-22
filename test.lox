@@ -1,5 +1,4 @@
-// continue;
 while (1) {
-    continue;
-    print "hello"; // unreachable
+    print "hello"; // prints once
+    break;
 }
