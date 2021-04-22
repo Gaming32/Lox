@@ -47,7 +47,15 @@ typedef struct {
 } Local;
 
 typedef struct {
+    int start;
+    int breakStmts[UINT8_COUNT];
+    int breakCount;
+} Loop;
+
+typedef struct {
     Local locals[UINT8_COUNT];
+    Loop loops[UINT8_COUNT];
+    Loop* loopTop;
     int localCount;
     int scopeDepth;
     Table globals;
@@ -202,6 +210,7 @@ static void patchJump(int offset) {
 
 static void initCompiler(Compiler* compiler) {
     initTable(&compiler->globals);
+    compiler->loopTop = &compiler->loops[0];
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     current = compiler;
@@ -445,6 +454,8 @@ ParseRule rules[] = {
     [TOKEN_TRUE]            = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]             = {NULL,     NULL,   PREC_NONE},
     [TOKEN_WHILE]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_BREAK]           = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_CONTINUE]        = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ERROR]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_EOF]             = {NULL,     NULL,   PREC_NONE},
 };
@@ -522,6 +533,12 @@ static void varDeclaration() {
     defineVariable(global);
 }
 
+static void pushLoop(int loopStart) {
+    current->loopTop->start = loopStart;
+    current->loopTop->breakCount = 0;
+    current->loopTop++;
+}
+
 static void expressionStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
@@ -576,6 +593,15 @@ static void forStatement() {
     endScope();
 }
 
+static void continueStatement() {
+    if (current->loopTop == &current->loops[0]) { // No loops
+        error("No loop to continue to top of.");
+    }
+    emitLoop(current->loopTop->start);
+    consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+    parser.panicMode = false;
+}
+
 static void ifStatement() {
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     expression();
@@ -602,6 +628,7 @@ static void printStatement() {
 
 static void whileStatement() {
     int loopStart = currentChunk()->count;
+    pushLoop(loopStart);
 
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
@@ -616,6 +643,8 @@ static void whileStatement() {
 
     patchJump(exitJump);
     emitByte(OP_POP);
+
+    current->loopTop--;
 }
 
 static void synchronize() {
@@ -655,6 +684,8 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
+    } else if (match(TOKEN_CONTINUE)) {
+        continueStatement();
     } else if (match(TOKEN_FOR)) {
         forStatement();
     } else if (match(TOKEN_IF)) {

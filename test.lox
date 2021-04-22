@@ -1,7 +1,5 @@
-var a = "world";
-var b = "world";
-
-while (a > 0) {
-    print a;
-    a = a - 1;
+// continue;
+while (1) {
+    continue;
+    print "hello"; // unreachable
 }
