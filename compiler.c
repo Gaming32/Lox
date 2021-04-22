@@ -8,6 +8,10 @@
 #include "compiler.h"
 #include "scanner.h"
 
+#ifdef DEBUG_PRINT_CODE
+    #include "debug.h"
+#endif
+
 typedef struct {
     Token current;
     Token previous;
@@ -58,7 +62,7 @@ typedef struct {
     Loop* loopTop;
     int localCount;
     int scopeDepth;
-    Table globals;
+    Table strings;
 } Compiler;
 
 Parser parser;
@@ -166,7 +170,7 @@ static uint16_t makeConstant(Value value) {
     int constant = -1;
     if (IS_STRING(value)) {
         Value destConstant;
-        if (tableGet(&current->globals, AS_STRING(value), &destConstant)) {
+        if (tableGet(&current->strings, AS_STRING(value), &destConstant)) {
             constant = AS_INT(destConstant);
         }
     }
@@ -177,7 +181,7 @@ static uint16_t makeConstant(Value value) {
             return 0;
         }
         if (IS_STRING(value)) {
-            tableSet(&current->globals, AS_STRING(value), INT_VAL(constant));
+            tableSet(&current->strings, AS_STRING(value), INT_VAL(constant));
         }
     }
 
@@ -209,7 +213,7 @@ static void patchJump(int offset) {
 }
 
 static void initCompiler(Compiler* compiler) {
-    initTable(&compiler->globals);
+    initTable(&compiler->strings);
     compiler->loopTop = &compiler->loops[0];
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
@@ -218,7 +222,13 @@ static void initCompiler(Compiler* compiler) {
 
 static void endCompiler() {
     emitReturn();
-    freeTable(&current->globals);
+    freeTable(&current->strings);
+
+#ifdef DEBUG_PRINT_CODE
+    if (!parser.hadError) {
+        disassembleChunk(currentChunk(), "code");
+    }
+#endif
 }
 
 static void beginScope() {
