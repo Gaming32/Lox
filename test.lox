@@ -1,4 +1,5 @@
-var a = 5;
+var a = "world";
+var b = "world";
 
 while (a > 0) {
     print a;

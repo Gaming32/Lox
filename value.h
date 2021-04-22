@@ -23,7 +23,7 @@ typedef struct {
         bool boolean;
         double number;
         Obj* obj;
-        long integer;
+        int integer;
     } as;
 } Value;
 

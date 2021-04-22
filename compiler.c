@@ -50,6 +50,7 @@ typedef struct {
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
+    Table globals;
 } Compiler;
 
 Parser parser;
@@ -154,10 +155,22 @@ static void emitReturn() {
 }
 
 static uint16_t makeConstant(Value value) {
-    int constant = addConstant(currentChunk(), value);
-    if (constant > UINT16_MAX) {
-        error("Too many constants in one chunk. (max is 65536)");
-        return 0;
+    int constant = -1;
+    if (IS_STRING(value)) {
+        Value destConstant;
+        if (tableGet(&current->globals, AS_STRING(value), &destConstant)) {
+            constant = AS_INT(destConstant);
+        }
+    }
+    if (constant == -1) {
+        constant = addConstant(currentChunk(), value);
+        if (constant > UINT16_MAX) {
+            error("Too many constants in one chunk. (max is 65536)");
+            return 0;
+        }
+        if (IS_STRING(value)) {
+            tableSet(&current->globals, AS_STRING(value), INT_VAL(constant));
+        }
     }
 
     return (uint16_t)constant;
@@ -188,6 +201,7 @@ static void patchJump(int offset) {
 }
 
 static void initCompiler(Compiler* compiler) {
+    initTable(&compiler->globals);
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     current = compiler;
@@ -195,6 +209,7 @@ static void initCompiler(Compiler* compiler) {
 
 static void endCompiler() {
     emitReturn();
+    freeTable(&current->globals);
 }
 
 static void beginScope() {
