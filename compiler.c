@@ -565,6 +565,7 @@ static void forStatement() {
     }
 
     int loopStart = currentChunk()->count;
+    pushLoop(loopStart);
 
     int exitJump = -1;
     if (!match(TOKEN_SEMICOLON)) {
@@ -592,6 +593,7 @@ static void forStatement() {
 
     emitLoop(loopStart);
 
+    popLoop();
     if (exitJump != -1) {
         patchJump(exitJump);
         emitByte(OP_POP);
@@ -657,8 +659,8 @@ static void whileStatement() {
 
     emitLoop(loopStart);
 
-    patchJump(exitJump);
     popLoop();
+    patchJump(exitJump);
     emitByte(OP_POP);
 }
 
