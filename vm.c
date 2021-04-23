@@ -3,10 +3,12 @@
 #include <string.h>
 
 #include "common.h"
+#include "errors.h"
 #include "compiler.h"
 #include "debug.h"
 #include "object.h"
 #include "memory.h"
+#include "natives.h"
 #include "utils.h"
 #include "vm.h"
 
@@ -19,11 +21,9 @@ static void resetStack() {
     vm.frameCount = 0;
 }
 
-static void runtimeError(const char* format, ...) {
-    va_list args;
-    va_start(args, format);
+void vruntimeError(const char* format, va_list args) {
+    vm.hasError = true;
     vfprintf(stderr, format, args);
-    va_end(args);
     fputs("\n", stderr);
 
     for (int i = vm.frameCount - 1; i >= 0; i--) {
@@ -42,12 +42,30 @@ static void runtimeError(const char* format, ...) {
     resetStack();
 }
 
+void runtimeError(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    vruntimeError(format, args);
+    va_end(args);
+}
+
+void defineNative(const char* name, NativeFn function) {
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stackTop[-2]), vm.stackTop[-1]);
+    pop();
+    pop();
+}
+
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    vm.hasError = false;
 
     initTable(&vm.globals);
     initTable(&vm.strings);
+
+    initializeNatives();
 }
 
 void freeVM() {
@@ -72,7 +90,7 @@ static Value peek(int distance) {
 
 static bool call(ObjFunction* function, int argCount) {
     if (argCount != function->arity) {
-        runtimeError("Expected %d arguments but got %d", function->arity, argCount);
+        ERR_ARGCOUNT(function->arity, argCount);
         return false;
     }
 
@@ -94,6 +112,18 @@ static bool callValue(Value callee, int argCount) {
         switch (OBJ_TYPE(callee)) {
             case OBJ_FUNCTION:
                 return call(AS_FUNCTION(callee), argCount);
+
+            case OBJ_NATIVE: {
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);
+                bool failure = IS_NULL(result);
+                if (failure && !vm.hasError) {
+                    runtimeError("An error occured.");
+                }
+                return !failure;
+            }
 
             default:
                 // Non-callable object type

@@ -63,7 +63,7 @@ static void runFile(const char* path) {
 int main(int argc, const char* argv[]) {
     initVM();
 
-#ifdef DEBUG_STATISTICS
+#ifdef ALWAYS_SHOW_BANNER
     printf("CallFrame size: %lu\n", (unsigned long)sizeof(CallFrame));
     printf("Value size: %lu\n", (unsigned long)sizeof(Value));
     printf("VM size: %lu\n\n", (unsigned long)sizeof(VM));

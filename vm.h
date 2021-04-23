@@ -1,6 +1,8 @@
 #ifndef clox_vm_h
 #define clox_vm_h
 
+#include <stdarg.h>
+
 #include "object.h"
 #include "table.h"
 #include "value.h"
@@ -15,6 +17,8 @@ typedef struct {
 } CallFrame;
 
 typedef struct {
+    bool hasError;
+
     CallFrame frames[FRAMES_MAX];
     int frameCount;
 
@@ -36,6 +40,9 @@ typedef enum {
 
 extern VM vm;
 
+void vruntimeError(const char* format, va_list args);
+void runtimeError(const char* format, ...);
+void defineNative(const char* name, NativeFn function);
 void initVM();
 void freeVM();
 InterpretResult interpret(const char* source);

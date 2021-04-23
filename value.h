@@ -36,14 +36,16 @@ typedef struct {
 #define AS_NUMBER(value)  ((value).as.number)
 #define AS_OBJ(value)     ((value).as.obj)
 
-#define BOOL_VAL(value)   ((Value){VAL_BOOL, {.boolean = value}})
+#define BOOL_VAL(value)   ((Value){VAL_BOOL, {.boolean = (value)}})
 #define NIL_VAL           ((Value){VAL_NIL, {.boolean = false}})
-#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = value}})
-#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)object}})
+#define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = (value)}})
+#define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)(object)}})
 
+#define NULL_VAL          ((Value){VAL_OBJ, {.obj = NULL}})
+#define IS_NULL(value)    isNull(value)
 #define IS_INT(value)     ((value).type == VAL_INT)
 #define AS_INT(value)     ((value).as.integer)
-#define INT_VAL(value)    ((Value){VAL_INT, {.integer = (int)value}})
+#define INT_VAL(value)    ((Value){VAL_INT, {.integer = (int)(value)}})
 
 typedef struct {
     int capacity;
@@ -58,5 +60,9 @@ void writeValueArray(ValueArray* array, Value value);
 void freeValueArray(ValueArray* array);
 int stringifyValue(char** result, Value value);
 void printValue(Value value);
+
+static inline bool isNull(Value value) {
+    return value.type == VAL_OBJ && value.as.obj == NULL;
+}
 
 #endif
