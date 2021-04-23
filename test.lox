@@ -1,10 +1,15 @@
-// fun square(a) {
-//     return a * a;
-// }
-
-// print square(11);
-
-for (var a = 0; a < 3; a = a + 1) {
-    if (a == 1) continue;
-    print a;
+fun square(a) {
+    // print a * a;
+    return a * a;
 }
+
+fun bad() {
+    bad();
+}
+
+// bad();
+print square;
+// print square(11, 13);
+return 5;
+print square(11);
+print "hello world!";

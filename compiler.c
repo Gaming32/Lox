@@ -62,6 +62,7 @@ typedef enum {
 } FunctionType;
 
 typedef struct {
+    struct Compiler* enclosing;
     ObjFunction* function;
     FunctionType type;
 
@@ -171,6 +172,7 @@ static int emitJump(uint8_t instruction) {
 }
 
 static void emitReturn() {
+    emitByte(OP_NIL);
     emitByte(OP_RETURN);
 }
 
@@ -221,6 +223,7 @@ static void patchJump(int offset) {
 }
 
 static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;
     compiler->function = NULL;
     compiler->type = type;
     initTable(&compiler->strings);
@@ -229,6 +232,10 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     compiler->scopeDepth = 0;
     compiler->function = newFunction();
     current = compiler;
+
+    if (type != TYPE_SCRIPT) {
+        current->function->name = copyString(parser.previous.start, parser.previous.length);
+    }
 
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
@@ -244,9 +251,11 @@ static ObjFunction* endCompiler() {
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
         disassembleChunk(currentChunk(), function->name != NULL ? function->name->chars : "<script>");
+        printf("\n");
     }
 #endif
 
+    current = current->enclosing;
     return function;
 }
 
@@ -323,6 +332,23 @@ static void declareVariable() {
     addLocal(*name);
 }
 
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            expression();
+
+            if (argCount == 255) {
+                error("Can't have more that 255 arguments");
+            }
+            argCount++;
+        } while (match(TOKEN_COMMA));
+    }
+
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    return argCount;
+}
+
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
 
@@ -350,6 +376,11 @@ static void binary(bool canAssign) {
         default:
             return;
     }
+}
+
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();
+    emitBytes(OP_CALL, argCount);
 }
 
 static void literal(bool canAssign) {
@@ -439,7 +470,7 @@ static void unary(bool canAssign) {
 }
 
 ParseRule rules[] = {
-    [TOKEN_LEFT_PAREN]      = {grouping, NULL,   PREC_NONE},
+    [TOKEN_LEFT_PAREN]      = {grouping, call,   PREC_CALL},
     [TOKEN_RIGHT_PAREN]     = {NULL,     NULL,   PREC_NONE},
     [TOKEN_LEFT_BRACE]      = {NULL,     NULL,   PREC_NONE}, 
     [TOKEN_RIGHT_BRACE]     = {NULL,     NULL,   PREC_NONE},
@@ -521,6 +552,7 @@ static uint16_t parseVariable(const char* errorMessage) {
 }
 
 static void markInitialized() {
+    if (current->scopeDepth == 0) return;
     current->locals[current->localCount - 1].depth = current->scopeDepth;
 }
 
@@ -549,8 +581,41 @@ static void block() {
     consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Can't have more that 255 parameters.");
+            }
+
+            uint16_t paramConstant = parseVariable("Expect parameter name");
+            defineVariable(paramConstant);
+        } while (match(TOKEN_COMMA));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+    block();
+
+    ObjFunction* function = endCompiler();
+    emitConstantOperator(makeConstant(OBJ_VAL(function)), OP_CONSTANT, OP_CONSTANT_LONG);
+}
+
+static void funDeclaration() {
+    uint16_t global = parseVariable("Expect function name.");
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
+}
+
 static void varDeclaration() {
-    uint8_t global = parseVariable("Expect variable name.");
+    uint16_t global = parseVariable("Expect variable name.");
 
     if (match(TOKEN_EQUAL)) {
         expression();
@@ -672,6 +737,19 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+static void returnStatement() {
+    if (match(TOKEN_SEMICOLON)) {
+        emitReturn();
+    } else {
+        if (current->type == TYPE_SCRIPT) {
+            error("Can't return value from top-level code.");
+        }
+        expression();
+        consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+        emitByte(OP_RETURN);
+    }
+}
+
 static void whileStatement() {
     int loopStart = currentChunk()->count;
     pushLoop(loopStart);
@@ -717,7 +795,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_VAR)) {
+    if (match(TOKEN_FUN)) {
+        funDeclaration();
+    } else if (match(TOKEN_VAR)) {
         varDeclaration();
     } else {
         statement();
@@ -737,6 +817,8 @@ static void statement() {
         forStatement();
     } else if (match(TOKEN_IF)) {
         ifStatement();
+    } else if (match(TOKEN_RETURN)) {
+        returnStatement();
     } else if (match(TOKEN_WHILE)) {
         whileStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {

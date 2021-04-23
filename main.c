@@ -63,6 +63,16 @@ static void runFile(const char* path) {
 int main(int argc, const char* argv[]) {
     initVM();
 
+#ifdef DEBUG_STATISTICS
+    printf("CallFrame size: %lu\n", (unsigned long)sizeof(CallFrame));
+    printf("Value size: %lu\n", (unsigned long)sizeof(Value));
+    printf("VM size: %lu\n\n", (unsigned long)sizeof(VM));
+
+    printf("vm size (on C stack): %lu\n", (unsigned long)sizeof(VM));
+    printf("vm.frames size (on C stack): %lu\n", (unsigned long)sizeof(vm.frames));
+    printf("vm.stack size (on C heap): %lu\n\n", (unsigned long)(STACK_MAX * sizeof(Value)));
+#endif
+
     if (argc == 1) {
         repl();
     } else if (argc == 2) {
