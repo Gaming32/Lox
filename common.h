@@ -6,8 +6,10 @@
 #include <stdint.h>
 
 #define ALWAYS_SHOW_BANNER
-// #define DEBUG_PRINT_CODE
-// #define DEBUG_TRACE_EXECUTION
+#ifdef EBUG_ALL
+    #define DEBUG_PRINT_CODE
+    #define DEBUG_TRACE_EXECUTION
+#endif
 
 #define UINT8_COUNT (UINT8_MAX + 1)
 
