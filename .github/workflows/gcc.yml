@@ -17,10 +17,12 @@ jobs:
       - name: Install GCC
         uses: egor-tensin/setup-gcc@v1
 
-      # Runs a set of commands using the runners shell
-      - name: Compile CLox
-        run: gcc *.c -o clox
-        
+      - name: Compile CLox Debug
+        run: gcc -Wall -Og *.c -o clox.exe
+
+      - name: Compile CLox Release
+        run: gcc -O3 *.c -o clox.exe
+
   build-windows:
     runs-on: windows-latest
 
@@ -33,6 +35,8 @@ jobs:
       - name: Install MinGW
         uses: egor-tensin/setup-mingw@v2
 
-      # Runs a set of commands using the runners shell
-      - name: Compile CLox
-        run: gcc *.c -o clox.exe
+      - name: Compile CLox Debug
+        run: gcc -Wall -Og *.c -o clox
+
+      - name: Compile CLox Release
+        run: gcc -O3 *.c -o clox
