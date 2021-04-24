@@ -48,6 +48,8 @@ typedef enum {
     OP_JUMP_IF_TRUE,
 
     OP_CALL,
+    OP_CLOSURE,
+    OP_CLOSURE_LONG,
 
     OP_PRINT,
     OP_POP,

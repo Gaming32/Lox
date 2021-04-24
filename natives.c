@@ -20,6 +20,7 @@ static Value funGetTypeName(int argCount, Value* args) {
                 break;
             }
             switch (OBJ_TYPE(args[0])) {
+                case OBJ_CLOSURE:  length = asprintf(&result, "closure"); break;
                 case OBJ_FUNCTION: length = asprintf(&result, "function"); break;
                 case OBJ_NATIVE:   length = asprintf(&result, "native"); break;
                 case OBJ_STRING:   length = asprintf(&result, "string"); break;
@@ -36,7 +37,7 @@ static Value funToString(int argCount, Value* args) {
     EXPECT_ARGS(argCount, 1);
     char* result;
     int length = stringifyValue(&result, args[0]);
-    return OBJ_VAL(takeString(result, length - 1));
+    return OBJ_VAL(takeString(result, length));
 }
 
 static Value funClock(int argCount, Value* args) {

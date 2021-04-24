@@ -41,7 +41,7 @@ typedef struct {
 #define NUMBER_VAL(value) ((Value){VAL_NUMBER, {.number = (value)}})
 #define OBJ_VAL(object)   ((Value){VAL_OBJ, {.obj = (Obj*)(object)}})
 
-#define NULL_VAL          ((Value){VAL_OBJ, {.obj = NULL}})
+#define NULL_VAL          ((Value){VAL_OBJ, {.obj = NULL}}) // NULL is used for native functions to return errors.
 #define IS_NULL(value)    isNull(value)
 #define IS_INT(value)     ((value).type == VAL_INT)
 #define AS_INT(value)     ((value).as.integer)

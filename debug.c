@@ -14,7 +14,7 @@ void disassembleChunk(Chunk* chunk, const char* name) {
 
 static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t constant = chunk->code[offset + 1];
-    printf("%-16s %4d '", name, constant);
+    printf("%-18s %4d '", name, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 2;
@@ -24,7 +24,7 @@ static int constantInstructionLong(const char* name, Chunk* chunk, int offset) {
     uint8_t constantA = chunk->code[offset + 1];
     uint8_t constantB = chunk->code[offset + 2];
     uint16_t constant = DECODE16BITS(constantA, constantB);
-    printf("%-16s %4d '", name, constant);
+    printf("%-18s %4d '", name, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 3;
@@ -37,14 +37,21 @@ static int simpleInstruction(const char* name, int offset) {
 
 static int byteInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t slot = chunk->code[offset + 1];
-    printf("%-16s %4d\n", name, slot);
+    printf("%-18s %4d\n", name, slot);
     return offset + 2; 
 }
 
 static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
     uint16_t jump = DECODE16BITS(chunk->code[offset + 1], chunk->code[offset + 2]);
-    printf("%-16s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
+    printf("%-18s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
     return offset + 3;
+}
+
+static int closureInstruction(const char* name, uint16_t constant, Chunk* chunk, int offset) {
+    printf("%-18s %4d ", "OP_CLOSURE", constant);
+    printValue(chunk->constants.values[constant]);
+    printf("\n");
+    return offset;
 }
 
 int disassembleInstruction(Chunk* chunk, int offset) {
@@ -128,6 +135,16 @@ int disassembleInstruction(Chunk* chunk, int offset) {
 
         case OP_CALL:
             return byteInstruction("OP_CALL", chunk, offset);
+        case OP_CLOSURE: {
+            offset++;
+            uint8_t constant = chunk->code[offset++];
+            return closureInstruction("OP_CLOSURE", (uint16_t)constant, chunk, offset);
+        }
+        case OP_CLOSURE_LONG: {
+            offset += 3;
+            uint16_t constant = DECODE16BITS(chunk->code[offset - 2], chunk->code[offset - 1]);
+            return closureInstruction("OP_CLOSURE_LONG", constant, chunk, offset);
+        }
 
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset);

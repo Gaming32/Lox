@@ -20,6 +20,12 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+ObjClosure* newClosure(ObjFunction* function) {
+    ObjClosure* closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+    closure->function = function;
+    return closure;
+}
+
 ObjFunction* newFunction() {
     ObjFunction* function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
 
@@ -89,6 +95,8 @@ static int stringifyFunction(char** result, ObjFunction* function) {
 
 int stringifyObject(char** result, Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_CLOSURE:
+            return stringifyFunction(result, AS_CLOSURE(value)->function);
         case OBJ_FUNCTION:
             return stringifyFunction(result, AS_FUNCTION(value));
         case OBJ_NATIVE:

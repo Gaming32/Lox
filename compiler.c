@@ -604,7 +604,7 @@ static void function(FunctionType type) {
     block();
 
     ObjFunction* function = endCompiler();
-    emitConstantOperator(makeConstant(OBJ_VAL(function)), OP_CONSTANT, OP_CONSTANT_LONG);
+    emitConstantOperator(makeConstant(OBJ_VAL(function)), OP_CLOSURE, OP_CLOSURE_LONG);
 }
 
 static void funDeclaration() {

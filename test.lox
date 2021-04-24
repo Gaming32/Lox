@@ -1,15 +1,11 @@
-fun square(a) {
-    // print a * a;
-    return a * a;
+fun makeClosure(value) {
+    fun closure() {
+        print value;
+    }
+    return closure;
 }
 
-fun bad() {
-    bad();
-}
-
-// bad();
-print square;
-// print square(11, 13);
-return 5;
-print square(11);
-print "hello world!";
+var doughnut = makeClosure("doughnut");
+var bagel = makeClosure("bagel");
+doughnut();
+bagel();
