@@ -24,6 +24,7 @@ static Value funGetTypeName(int argCount, Value* args) {
                 case OBJ_FUNCTION: length = asprintf(&result, "function"); break;
                 case OBJ_NATIVE:   length = asprintf(&result, "native"); break;
                 case OBJ_STRING:   length = asprintf(&result, "string"); break;
+                case OBJ_UPVALUE:  length = asprintf(&result, "upvalue"); break;
                 default:           length = asprintf(&result, "object"); break;
             }
             break;

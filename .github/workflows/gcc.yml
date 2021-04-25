@@ -23,15 +23,15 @@ jobs:
       - name: Compile CLox Release
         run: gcc -O3 *.c -o clox.release.exe
       
-      - name: Upload to commit-builds
-        continue-on-error: true
-        if: ${{ github.event_name == 'push' }}
-        uses: EndBug/add-and-commit@v7.2.0
-        with:
-          add: "['clox', 'clox_release']"
-          branch: commit-builds
-          default_author: github_actions
-          message: Build for "${{ github.event.head_commit.message }}" (Ubuntu)
+      # - name: Upload to commit-builds
+      #   continue-on-error: true
+      #   if: ${{ github.event_name == 'push' }}
+      #   uses: EndBug/add-and-commit@v7.2.0
+      #   with:
+      #     add: "['clox', 'clox_release']"
+      #     branch: commit-builds
+      #     default_author: github_actions
+      #     message: Build for "${{ github.event.head_commit.message }}" (Ubuntu)
 
   build-windows:
     runs-on: windows-latest
@@ -51,12 +51,12 @@ jobs:
       - name: Compile CLox Release
         run: gcc -O3 *.c -o clox_release
 
-      - name: Upload to commit-builds
-        continue-on-error: true
-        if: ${{ github.event_name == 'push' }}
-        uses: EndBug/add-and-commit@v7.2.0
-        with:
-          add: "['clox.exe', 'clox.release.exe']"
-          branch: commit-builds
-          default_author: github_actions
-          message: Build for "${{ github.event.head_commit.message }}" (Windows)
+      # - name: Upload to commit-builds
+      #   continue-on-error: true
+      #   if: ${{ github.event_name == 'push' }}
+      #   uses: EndBug/add-and-commit@v7.2.0
+      #   with:
+      #     add: "['clox.exe', 'clox.release.exe']"
+      #     branch: commit-builds
+      #     default_author: github_actions
+      #     message: Build for "${{ github.event.head_commit.message }}" (Windows)
