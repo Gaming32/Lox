@@ -66,6 +66,7 @@ int main(int argc, const char* argv[]) {
 #ifdef ALWAYS_SHOW_BANNER
     printf("CallFrame size: %lu\n", (unsigned long)sizeof(CallFrame));
     printf("Value size: %lu\n", (unsigned long)sizeof(Value));
+    printf("Obj size: %lu\n", (unsigned long)sizeof(Obj));
     printf("VM size: %lu\n\n", (unsigned long)sizeof(VM));
 
     printf("vm size (on C stack): %lu\n", (unsigned long)sizeof(VM));
