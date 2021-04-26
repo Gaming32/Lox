@@ -1,0 +1,3 @@
+for (var i = 0; i < 131072; i = i + 1) {
+    var a = toString(i);
+}
