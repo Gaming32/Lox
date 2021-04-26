@@ -671,7 +671,11 @@ static void function(FunctionType type) {
 }
 
 static void funDeclaration() {
-    uint16_t global = parseVariable("Can't have an anonymous function expression statement.");
+    if (check(TOKEN_LEFT_PAREN)) {
+        error("Can't have an anonmynous function expression statement");
+        return;
+    }
+    uint16_t global = parseVariable("Expect function name.");
     markInitialized();
     function(TYPE_FUNCTION);
     defineVariable(global);

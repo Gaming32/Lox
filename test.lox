@@ -1,11 +1,3 @@
-fun makeClosure(value) {
-    fun closure() {
-        print value;
-    }
-    return closure;
+fun .toString() {
+    return 35;
 }
-
-var doughnut = makeClosure("doughnut");
-var bagel = makeClosure("bagel");
-doughnut();
-bagel();
