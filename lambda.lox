@@ -1,0 +1,13 @@
+// var myvar = fun(a) {
+//     print a;
+// };
+
+// myvar("hello");
+
+
+var a = fun() {
+    var t = 5;
+    return t;
+}();
+
+print a;

@@ -285,6 +285,7 @@ static void endScope() {
     }
 }
 
+static void function(FunctionType type);
 static void expression();
 static void statement();
 static void declaration();
@@ -448,6 +449,10 @@ static void grouping(bool canAssign) {
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void lambda(bool canAssign) {
+    function(TYPE_FUNCTION);
+}
+
 static void number(bool canAssign) {
     double value = strtod(parser.previous.start, NULL);
     uint8_t truncated;
@@ -556,7 +561,7 @@ ParseRule rules[] = {
     [TOKEN_ELSE]            = {NULL,     NULL,   PREC_NONE},
     [TOKEN_FALSE]           = {literal,  NULL,   PREC_NONE},
     [TOKEN_FOR]             = {NULL,     NULL,   PREC_NONE},
-    [TOKEN_FUN]             = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_FUN]             = {lambda,   NULL,   PREC_NONE},
     [TOKEN_IF]              = {NULL,     NULL,   PREC_NONE},
     [TOKEN_NIL]             = {literal,  NULL,   PREC_NONE},
     [TOKEN_OR]              = {NULL,     or_,    PREC_OR},
