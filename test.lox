@@ -1,3 +1,1 @@
-fun .toString() {
-    return 35;
-}
+
