@@ -20,6 +20,7 @@ static Value funGetTypeName(int argCount, Value* args) {
                 break;
             }
             switch (OBJ_TYPE(args[0])) {
+                case OBJ_CLASS:    length = asprintf(&result, "class"); break;
                 case OBJ_CLOSURE:  length = asprintf(&result, "closure"); break;
                 case OBJ_FUNCTION: length = asprintf(&result, "function"); break;
                 case OBJ_NATIVE:   length = asprintf(&result, "native"); break;

@@ -653,7 +653,7 @@ static void function(FunctionType type) {
                 errorAtCurrent("Can't have more that 255 parameters.");
             }
 
-            uint16_t paramConstant = parseVariable("Expect parameter name");
+            uint16_t paramConstant = parseVariable("Expect parameter name.");
             defineVariable(paramConstant);
         } while (match(TOKEN_COMMA));
     }
@@ -669,6 +669,18 @@ static void function(FunctionType type) {
         emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
         emitByte(compiler.upvalues[i].index);
     }
+}
+
+static void classDeclaration() {
+    consume(TOKEN_IDENTIFIER, "Expect class name.");
+    uint16_t nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitConstantOperator(nameConstant, OP_CLASS, OP_CLASS_LONG);
+    defineVariable(nameConstant);
+
+    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
 }
 
 static void funDeclaration() {
@@ -871,7 +883,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_FUN)) {
+    if (match(TOKEN_CLASS)) {
+        classDeclaration();
+    } else if (match(TOKEN_FUN)) {
         funDeclaration();
     } else if (match(TOKEN_VAR)) {
         varDeclaration();

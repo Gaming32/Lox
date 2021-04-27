@@ -470,6 +470,13 @@ static InterpretResult run() {
                 break;
             }
 
+            case OP_CLASS:
+                push(OBJ_VAL(newClass(READ_STRING())));
+                break;
+            case OP_CLASS_LONG:
+                push(OBJ_VAL(newClass(READ_STRING_LONG())));
+                break;
+
             case OP_PRINT: {
                 printValue(pop());
                 printf("\n");

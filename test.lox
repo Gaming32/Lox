@@ -1,1 +1,16 @@
+// class MacAddress {
+//     init(mac) {
+//         this.mac = mac;
+//     }
+// }
 
+// print MacAddress;
+// print getTypeName(MacAddress);
+
+// var myaddr = MacAddress("001122334455");
+// print myaddr;
+// print getTypeName(myaddr);
+// print myaddr.mac;
+
+class Address{}
+print Address;
