@@ -5,11 +5,63 @@
 #include "value.h"
 #include "utils.h"
 
+static Value funHas(int argCount, Value* args) {
+    EXPECT_ARGS(argCount, 2);
+    Value fieldValue = args[1];
+    ObjString* field;
+    if (!IS_STRING(fieldValue)) {
+        return BOOL_VAL(false);
+    }
+    Value value = args[0];
+    field = AS_STRING(fieldValue);
+    if (IS_INSTANCE(value)) {
+        Value ignored;
+        return BOOL_VAL(tableGet(&AS_INSTANCE(value)->fields, field, &ignored));
+    }
+    return BOOL_VAL(false);
+}
+
+static Value funGet(int argCount, Value* args) {
+    EXPECT_ARGS(argCount, 2);
+    Value fieldValue = args[1];
+    ObjString* field;
+    if (!IS_STRING(fieldValue)) {
+        runtimeError("Cannot have non-string property of object");
+        return NULL_VAL;
+    }
+    Value value = args[0];
+    field = AS_STRING(fieldValue);
+    Value result;
+    if (!getProperty(value, field, &result)) {
+        return ERR_PROPERTY(field, value);
+    }
+    return result;
+}
+
+static Value funSet(int argCount, Value* args) {
+    EXPECT_ARGS(argCount, 3);
+    Value fieldValue = args[1];
+    ObjString* field;
+    if (!IS_STRING(fieldValue)) {
+        runtimeError("Cannot have non-string property of object");
+        return NULL_VAL;
+    }
+    Value value = args[0];
+    field = AS_STRING(fieldValue);
+    Value newValue = args[2];
+    if (IS_INSTANCE(value)) {
+        tableSet(&AS_INSTANCE(value)->fields, field, newValue);
+        return NIL_VAL;
+    }
+    runtimeError("Only instances have fields.");
+    return NULL_VAL;
+}
+
 static Value funGetTypeName(int argCount, Value* args) {
     EXPECT_ARGS(argCount, 1);
     char* result;
     int length;
-    switch (args[0].type) {
+    switch (args->type) {
         case VAL_BOOL:   length = asprintf(&result, "boolean"); break;
         case VAL_NUMBER: length = asprintf(&result, "number"); break;
         case VAL_NIL:    length = asprintf(&result, "nil"); break;
@@ -23,6 +75,7 @@ static Value funGetTypeName(int argCount, Value* args) {
                 case OBJ_CLASS:    length = asprintf(&result, "class"); break;
                 case OBJ_CLOSURE:  length = asprintf(&result, "closure"); break;
                 case OBJ_FUNCTION: length = asprintf(&result, "function"); break;
+                case OBJ_INSTANCE: length = asprintf(&result, "%s", AS_INSTANCE(args[0])->klass->name->chars); break;
                 case OBJ_NATIVE:   length = asprintf(&result, "native"); break;
                 case OBJ_STRING:   length = asprintf(&result, "string"); break;
                 case OBJ_UPVALUE:  length = asprintf(&result, "upvalue"); break;
@@ -46,6 +99,12 @@ static Value funClock(int argCount, Value* args) {
 }
 
 void initializeNatives() {
+    // Manage properties
+    defineNative("has", funHas);
+    defineNative("get", funGet);
+    defineNative("set", funSet);
+
+    // General tools
     defineNative("getTypeName", funGetTypeName);
     defineNative("toString", funToString);
     defineNative("clock", funClock);

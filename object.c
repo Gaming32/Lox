@@ -55,6 +55,13 @@ ObjFunction* newFunction() {
     return function;
 }
 
+ObjInstance* newInstance(ObjClass* klass) {
+    ObjInstance* instance = ALLOCATE_OBJ(ObjInstance, OBJ_INSTANCE);
+    instance->klass = klass;
+    initTable(&instance->fields);
+    return instance;
+}
+
 ObjNative* newNative(NativeFn function) {
     ObjNative* native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
     native->function = function;
@@ -131,6 +138,8 @@ int stringifyObject(char** result, Value value) {
             return stringifyFunction(result, AS_CLOSURE(value)->function);
         case OBJ_FUNCTION:
             return stringifyFunction(result, AS_FUNCTION(value));
+        case OBJ_INSTANCE:
+            return asprintf(result, "<%s instance at 0x%p>", AS_INSTANCE(value)->klass->name->chars, AS_OBJ(value));
         case OBJ_NATIVE:
             return asprintf(result, "<native fun>");
             break;

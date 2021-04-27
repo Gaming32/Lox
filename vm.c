@@ -117,6 +117,12 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_CLASS: {
+                ObjClass* klass = AS_CLASS(callee);
+                vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                return true;
+            }
+
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
 
@@ -176,7 +182,7 @@ static void closeUpvalues(Value* last) {
     }
 }
 
-static inline void loadClosure(ObjClosure* closure, CallFrame* frame) {
+static inline void opClosure(ObjClosure* closure, CallFrame* frame) {
     push(OBJ_VAL(closure));
     for (int i = 0; i < closure->upvalueCount; i++) {
         // *frame->ip++ has to be used directly this instead of READ_BYTE because it's not defined here
@@ -188,6 +194,37 @@ static inline void loadClosure(ObjClosure* closure, CallFrame* frame) {
             closure->upvalues[i] = frame->closure->upvalues[index];
         }
     }
+}
+
+bool getProperty(Value obj, ObjString* name, Value* result) {
+    switch (obj.type) {
+        case VAL_OBJ: {
+            if (isNull(obj)) {
+                return false;
+            }
+            switch (OBJ_TYPE(obj)) {
+                case OBJ_INSTANCE:
+                    return tableGet(&AS_INSTANCE(obj)->fields, name, result);
+                default:
+                    return false;
+            }
+        }
+        default:
+            return false;
+    }
+}
+
+static inline bool opGetProperty(ObjString* name) {
+    Value value;
+
+    if (getProperty(peek(0), name, &value)) {
+        pop();
+        push(value);
+        return false;
+    }
+
+    ERR_PROPERTY(name, peek(0));
+    return true;
 }
 
 static bool isFalsey(Value value) {
@@ -394,6 +431,7 @@ static InterpretResult run() {
                 }
                 break;
             }
+
             case OP_GET_LOCAL: {
                 uint8_t slot = READ_BYTE();
                 push(frame->slots[slot]);
@@ -412,6 +450,49 @@ static InterpretResult run() {
             case OP_SET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
                 *frame->closure->upvalues[slot]->location = peek(0);
+                break;
+            }
+
+            case OP_GET_PROPERTY: {
+                ObjString* name = READ_STRING();
+                if (opGetProperty(name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_GET_PROPERTY_LONG: {
+                ObjString* name = READ_STRING_LONG();
+                if (opGetProperty(name)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                break;
+            }
+            case OP_SET_PROPERTY: {
+                if (!IS_INSTANCE(peek(1))) {
+                    runtimeError("Only instances have fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING(), peek(0));
+
+                Value value = pop();
+                pop();
+                push(value);
+                break;
+            }
+            case OP_SET_PROPERTY_LONG: {
+                if (!IS_INSTANCE(peek(1))) {
+                    runtimeError("Only instances have fields.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjInstance* instance = AS_INSTANCE(peek(1));
+                tableSet(&instance->fields, READ_STRING_LONG(), peek(0));
+
+                Value value = pop();
+                pop();
+                push(value);
                 break;
             }
 
@@ -447,13 +528,13 @@ static InterpretResult run() {
             case OP_CLOSURE: {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT());
                 ObjClosure* closure = newClosure(function);
-                loadClosure(closure, frame);
+                opClosure(closure, frame);
                 break;
             }
             case OP_CLOSURE_LONG: {
                 ObjFunction* function = AS_FUNCTION(READ_CONSTANT_LONG());
                 ObjClosure* closure = newClosure(function);
-                loadClosure(closure, frame);
+                opClosure(closure, frame);
                 break;
             }
             case OP_CLOSE_UPVALUE:

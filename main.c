@@ -51,16 +51,19 @@ static char* readFile(const char* path) {
     return buffer;
 }
 
-static void runFile(const char* path) {
+static int runFile(const char* path) {
     char* source = readFile(path);
     InterpretResult result = interpret(source);
     free(source);
 
-    if (result == INTERPRET_COMPILE_ERROR) exit(65);
-    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+    if (result == INTERPRET_COMPILE_ERROR) return 65;;
+    if (result == INTERPRET_RUNTIME_ERROR) return 70;
+    return 0;
 }
 
 int main(int argc, const char* argv[]) {
+    int result = 0;
+
     initVM();
 
 #ifdef ALWAYS_SHOW_BANNER
@@ -77,12 +80,12 @@ int main(int argc, const char* argv[]) {
     if (argc == 1) {
         repl();
     } else if (argc == 2) {
-        runFile(argv[1]);
+        result = runFile(argv[1]);
     } else {
         fprintf(stderr, "Usage: clox [path]\n");
-        exit(64);
+        result = 64;
     }
 
     freeVM();
-    return 0;
+    return result;
 }
