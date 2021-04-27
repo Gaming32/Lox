@@ -50,6 +50,7 @@ extern VM vm;
 void vruntimeError(const char* format, va_list args);
 void runtimeError(const char* format, ...);
 void defineNative(const char* name, NativeFn function);
+ObjString* toString(Value value);
 void initVM();
 void freeVM();
 InterpretResult interpret(const char* source);

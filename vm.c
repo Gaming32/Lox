@@ -197,9 +197,17 @@ static bool isFalsey(Value value) {
         || (IS_STRING(value) && AS_STRING(value)->length == 0);
 }
 
+ObjString* toString(Value value) {
+    char* result;
+    int length = stringifyValue(&result, value);
+    return takeString(result, length);
+}
+
 static void concatenate() {
-    ObjString* b = AS_STRING(peek(0));
-    ObjString* a = AS_STRING(peek(1));
+    Value bVal = peek(0);
+    Value aVal = peek(1);
+    ObjString* a = IS_STRING(aVal) ? AS_STRING(aVal) : toString(aVal);
+    ObjString* b = IS_STRING(bVal) ? AS_STRING(bVal) : toString(bVal);
 
     int length = a->length + b->length;
     char* chars = ALLOCATE(char, length + 1);
@@ -295,7 +303,7 @@ static InterpretResult run() {
             case OP_LTE:         BINARY_OP(BOOL_VAL, <=); break;
             case OP_GTE:         BINARY_OP(BOOL_VAL, >=); break;
             case OP_ADD: {
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                if (IS_STRING(peek(0)) || IS_STRING(peek(1))) {
                     concatenate();
                 } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     double b = AS_NUMBER(pop());

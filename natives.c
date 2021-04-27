@@ -37,9 +37,7 @@ static Value funGetTypeName(int argCount, Value* args) {
 
 static Value funToString(int argCount, Value* args) {
     EXPECT_ARGS(argCount, 1);
-    char* result;
-    int length = stringifyValue(&result, args[0]);
-    return OBJ_VAL(takeString(result, length));
+    return OBJ_VAL(toString(args[0]));
 }
 
 static Value funClock(int argCount, Value* args) {
