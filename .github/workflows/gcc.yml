@@ -18,10 +18,16 @@ jobs:
         uses: egor-tensin/setup-gcc@v1
 
       - name: Compile CLox Debug
-        run: gcc -Wall -Og *.c -o clox.exe
+        run: gcc -Wall -Og *.c -o clox_debug
 
       - name: Compile CLox Release
-        run: gcc -O3 *.c -o clox.release.exe
+        run: gcc -O3 *.c -o clox
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-ubuntu
+          path: clox
       
       # - name: Upload to commit-builds
       #   continue-on-error: true
@@ -46,10 +52,16 @@ jobs:
         uses: egor-tensin/setup-mingw@v2
 
       - name: Compile CLox Debug
-        run: gcc -Wall -Og *.c -o clox
+        run: gcc -Wall -Og *.c -o clox.debug.exe
 
       - name: Compile CLox Release
-        run: gcc -O3 *.c -o clox_release
+        run: gcc -O3 *.c -o clox.exe
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-windows
+          path: clox.exe
 
       # - name: Upload to commit-builds
       #   continue-on-error: true
