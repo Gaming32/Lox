@@ -50,6 +50,11 @@ typedef enum {
     OP_SET_PROPERTY,
     OP_SET_PROPERTY_LONG,
 
+    OP_GET_SUPER,
+    OP_GET_SUPER_LONG,
+    OP_SUPER_INVOKE,
+    OP_SUPER_INVOKE_LONG,
+
     OP_JUMP,
     OP_JUMP_BACKWARDS,
     OP_JUMP_IF_FALSE,
@@ -66,6 +71,7 @@ typedef enum {
 
     OP_CLASS,
     OP_CLASS_LONG,
+    OP_INHERIT,
     OP_METHOD,
     OP_METHOD_LONG,
 

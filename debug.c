@@ -20,7 +20,7 @@ void disassembleChunk(Chunk* chunk, const char* name) {
 
 static int constantInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t constant = chunk->code[offset + 1];
-    printf("%-18s %4d '", name, constant);
+    printf("%-20s %4d '", name, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 2;
@@ -28,7 +28,7 @@ static int constantInstruction(const char* name, Chunk* chunk, int offset) {
 
 static int constantInstructionLong(const char* name, Chunk* chunk, int offset) {
     CONSTANT_LONG;
-    printf("%-18s %4d '", name, constant);
+    printf("%-20s %4d '", name, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 3;
@@ -37,7 +37,7 @@ static int constantInstructionLong(const char* name, Chunk* chunk, int offset) {
 static int invokeInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t constant = chunk->code[offset + 1];
     uint8_t argCount = chunk->code[offset + 2];
-    printf("%-18s (%d args) %4d '", name, argCount, constant);
+    printf("%-20s (%d args) %4d '", name, argCount, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 3;
@@ -46,7 +46,7 @@ static int invokeInstruction(const char* name, Chunk* chunk, int offset) {
 static int invokeInstructionLong(const char* name, Chunk* chunk, int offset) {
     CONSTANT_LONG;
     uint8_t argCount = chunk->code[offset + 2];
-    printf("%-18s (%d args) %4d '", name, argCount, constant);
+    printf("%-20s (%d args) %4d '", name, argCount, constant);
     printValue(chunk->constants.values[constant]);
     printf("'\n");
     return offset + 3;
@@ -59,18 +59,18 @@ static int simpleInstruction(const char* name, int offset) {
 
 static int byteInstruction(const char* name, Chunk* chunk, int offset) {
     uint8_t slot = chunk->code[offset + 1];
-    printf("%-18s %4d\n", name, slot);
+    printf("%-20s %4d\n", name, slot);
     return offset + 2; 
 }
 
 static int jumpInstruction(const char* name, int sign, Chunk* chunk, int offset) {
     uint16_t jump = DECODE16BITS(chunk->code[offset + 1], chunk->code[offset + 2]);
-    printf("%-18s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
+    printf("%-20s %4d -> %d\n", name, offset, offset + 3 + sign * jump);
     return offset + 3;
 }
 
 static int closureInstruction(const char* name, uint16_t constant, Chunk* chunk, int offset) {
-    printf("%-18s %4d ", "OP_CLOSURE", constant);
+    printf("%-20s %4d ", "OP_CLOSURE", constant);
     printValue(chunk->constants.values[constant]);
     printf("\n");
 
@@ -177,6 +177,15 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_SET_PROPERTY_LONG:
             return constantInstructionLong("OP_SET_PROPERTY_LONG", chunk, offset);
 
+        case OP_GET_SUPER:
+            return constantInstruction("OP_GET_SUPER", chunk, offset);
+        case OP_GET_SUPER_LONG:
+            return constantInstructionLong("OP_GET_SUPER_LONG", chunk, offset);
+        case OP_SUPER_INVOKE:
+            return invokeInstruction("OP_SUPER_INVOKE", chunk, offset);
+        case OP_SUPER_INVOKE_LONG:
+            return invokeInstructionLong("OP_SUPER_INVOKE_LONG", chunk, offset);
+
         case OP_JUMP:
             return jumpInstruction("OP_JUMP", 1, chunk, offset);
         case OP_JUMP_BACKWARDS:
@@ -213,6 +222,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return constantInstruction("OP_CLASS", chunk, offset);
         case OP_CLASS_LONG:
             return constantInstructionLong("OP_CLASS_LONG", chunk, offset);
+        case OP_INHERIT:
+            return simpleInstruction("OP_IHERIT", offset);
         case OP_METHOD:
             return constantInstruction("OP_METHOD", chunk, offset);
         case OP_METHOD_LONG:
