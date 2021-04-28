@@ -8,8 +8,5 @@ class MacAddress {
 }
 
 print MacAddress;
-// var myaddr = MacAddress();
 var myaddr = MacAddress("001122334455");
-// myaddr.mac = "001122334455";
 print myaddr;
-myaddr.display("Address:");

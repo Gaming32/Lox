@@ -56,10 +56,13 @@ typedef enum {
     OP_JUMP_IF_TRUE,
 
     OP_CALL,
+    OP_INVOKE,
+    OP_INVOKE_LONG,
     OP_CLOSURE,
     OP_CLOSURE_LONG,
     OP_CLOSE_UPVALUE,
     OP_RETURN,
+    OP_RETURN_NIL,
 
     OP_CLASS,
     OP_CLASS_LONG,

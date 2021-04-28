@@ -191,11 +191,10 @@ static int emitJump(uint8_t instruction) {
 static void emitReturn() {
     if (current->type == TYPE_INITIALIZER) {
         emitBytes(OP_GET_LOCAL, 0);
+        emitByte(OP_RETURN);
     } else {
-        emitByte(OP_NIL);
+        emitByte(OP_RETURN_NIL);
     }
-
-    emitByte(OP_RETURN);
 }
 
 static uint16_t makeConstant(Value value) {
@@ -461,6 +460,10 @@ static void dot(bool canAssign) {
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitConstantOperator(name, OP_SET_PROPERTY, OP_SET_PROPERTY_LONG);
+    } else if (match(TOKEN_LEFT_PAREN)) {
+        uint8_t argCount = argumentList();
+        emitConstantOperator(name, OP_INVOKE, OP_INVOKE_LONG);
+        emitByte(argCount);
     } else {
         emitConstantOperator(name, OP_GET_PROPERTY, OP_GET_PROPERTY_LONG);
     }
