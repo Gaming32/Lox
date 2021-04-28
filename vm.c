@@ -72,12 +72,16 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.strings);
 
+    vm.initString = NULL;
+    vm.initString = copyString("init", 4);
+
     initializeNatives();
 }
 
 void freeVM() {
     freeTable(&vm.globals);
     freeTable(&vm.strings);
+    vm.initString = NULL;
     freeObjects();
 }
 
@@ -117,9 +121,23 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_BOUND_METHOD: {
+                ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
+                vm.stackTop[-argCount - 1] = bound->reciever;
+                return call(bound->method, argCount);
+            }
+
             case OBJ_CLASS: {
                 ObjClass* klass = AS_CLASS(callee);
                 vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
+                Value initializer;
+                if (tableGet(&klass->methods, vm.initString, &initializer)) {
+                    return call(AS_CLOSURE(initializer), argCount);
+                }
+                else if (argCount != 0) {
+                    runtimeError("Expected 0 arguments to constructor but got %d.", argCount);
+                    return false;
+                }
                 return true;
             }
 
@@ -145,6 +163,19 @@ static bool callValue(Value callee, int argCount) {
     }
 
     runtimeError("Can only call functions and classes.");
+    return false;
+}
+
+static bool bindMethod(ObjClass* klass, ObjString* name) {
+    Value method;
+    if (!tableGet(&klass->methods, name, &method)) {
+        ERR_PROPERTY(name, peek(0));
+        return true;
+    }
+
+    ObjBoundMethod* bound = newBoundMethod(peek(0), AS_CLOSURE(method));
+    pop();
+    push(OBJ_VAL(bound));
     return false;
 }
 
@@ -182,6 +213,13 @@ static void closeUpvalues(Value* last) {
     }
 }
 
+static void defineMethod(ObjString* name) {
+    Value method = peek(0);
+    ObjClass* klass = AS_CLASS(peek(1));
+    tableSet(&klass->methods, name, method);
+    pop();
+}
+
 static inline void opClosure(ObjClosure* closure, CallFrame* frame) {
     push(OBJ_VAL(closure));
     for (int i = 0; i < closure->upvalueCount; i++) {
@@ -215,15 +253,18 @@ bool getProperty(Value obj, ObjString* name, Value* result) {
 }
 
 static inline bool opGetProperty(ObjString* name) {
+    Value obj = peek(0);
     Value value;
 
-    if (getProperty(peek(0), name, &value)) {
+    if (getProperty(obj, name, &value)) {
         pop();
         push(value);
         return false;
     }
 
-    ERR_PROPERTY(name, peek(0));
+    if (IS_INSTANCE(obj)) {
+        return bindMethod(AS_INSTANCE(obj)->klass, name);
+    }
     return true;
 }
 
@@ -564,6 +605,12 @@ static InterpretResult run() {
                 break;
             case OP_CLASS_LONG:
                 push(OBJ_VAL(newClass(READ_STRING_LONG())));
+                break;
+            case OP_METHOD:
+                defineMethod(READ_STRING());
+                break;
+            case OP_METHOD_LONG:
+                defineMethod(READ_STRING_LONG());
                 break;
 
             case OP_PRINT: {

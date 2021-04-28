@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -26,9 +27,17 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+ObjBoundMethod* newBoundMethod(Value reciever, ObjClosure* method) {
+    ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
+    bound->reciever = reciever;
+    bound->method = method;
+    return bound;
+}
+
 ObjClass* newClass(ObjString* name) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     klass->name = name;
+    initTable(&klass->methods);
     return klass;
 }
 
@@ -132,6 +141,15 @@ static int stringifyFunction(char** result, ObjFunction* function) {
 
 int stringifyObject(char** result, Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_BOUND_METHOD: {
+            char* subObject;
+            stringifyValue(&subObject, AS_BOUND_METHOD(value)->reciever);
+            int length = asprintf(result, "<bound method %s of object '%s'>",
+                                  AS_BOUND_METHOD(value)->method->function->name->chars,
+                                  subObject);
+            free(subObject);
+            return length;
+        }
         case OBJ_CLASS:
             return asprintf(result, "<class %s>", AS_CLASS(value)->name->chars);
         case OBJ_CLOSURE:
