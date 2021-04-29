@@ -57,6 +57,28 @@ static Value funSet(int argCount, Value* args) {
     return NULL_VAL;
 }
 
+static Value funSize(int argCount, Value* args) {
+    EXPECT_ARGS(argCount, 1);
+    Value obj = args[0];
+    if (!IS_OBJ(obj) || IS_NULL(obj)) {
+        goto error;
+    }
+    switch (OBJ_TYPE(obj)) {
+        case OBJ_STRING:
+            return NUMBER_VAL(AS_STRING(obj)->length);
+
+        case OBJ_ARRAY:
+            return NUMBER_VAL(AS_ARRAY(obj).count);
+
+        default:
+            // Unsupported type
+            break;
+    }
+    error:
+    runtimeError("Only strings, arrays, and tables have size/length");
+    return NULL_VAL;
+}
+
 static Value funGetTypeName(int argCount, Value* args) {
     EXPECT_ARGS(argCount, 1);
     char* result;
@@ -77,8 +99,9 @@ static Value funGetTypeName(int argCount, Value* args) {
                 case OBJ_FUNCTION: length = asprintf(&result, "function"); break;
                 case OBJ_INSTANCE: length = asprintf(&result, "%s", AS_INSTANCE(args[0])->klass->name->chars); break;
                 case OBJ_NATIVE:   length = asprintf(&result, "native"); break;
-                case OBJ_STRING:   length = asprintf(&result, "string"); break;
                 case OBJ_UPVALUE:  length = asprintf(&result, "upvalue"); break;
+                case OBJ_STRING:   length = asprintf(&result, "string"); break;
+                case OBJ_ARRAY:    length = asprintf(&result, "array"); break;
                 default:           length = asprintf(&result, "object"); break;
             }
             break;
@@ -103,6 +126,9 @@ void initializeNatives() {
     defineNative("has", funHas);
     defineNative("get", funGet);
     defineNative("set", funSet);
+
+    // Array/string tools
+    defineNative("size", funSize);
 
     // General tools
     defineNative("getTypeName", funGetTypeName);

@@ -71,6 +71,7 @@ typedef enum {
 
     OP_SUBSCRIPT,
     OP_SUBSCRIPT_ASSIGN,
+    OP_NEW_ARRAY,
 
     OP_CLASS,
     OP_CLASS_LONG,

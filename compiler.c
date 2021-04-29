@@ -454,7 +454,7 @@ static void call(bool canAssign) {
     emitBytes(OP_CALL, argCount);
 }
 
-static void subscript(bool canAssign) {
+static uint8_t arrayArgList() {
     uint8_t argCount = 0;
     if (!check(TOKEN_RIGHT_BRACKET)) {
         do {
@@ -467,13 +467,22 @@ static void subscript(bool canAssign) {
         } while (match(TOKEN_COMMA));
     }
     consume(TOKEN_RIGHT_BRACKET, "Expect ']' after arguments.");
+    return argCount;
+}
 
+static void subscript(bool canAssign) {
+    uint8_t argCount = arrayArgList();
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(OP_SUBSCRIPT_ASSIGN, argCount);
     } else {
         emitBytes(OP_SUBSCRIPT, argCount);
     }
+}
+
+static void array(bool canAssign) {
+    uint8_t argCount = arrayArgList();
+    emitBytes(OP_NEW_ARRAY, argCount);
 }
 
 static void dot(bool canAssign) {
@@ -625,7 +634,7 @@ static void unary(bool canAssign) {
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN]      = {grouping, call,      PREC_CALL},
     [TOKEN_RIGHT_PAREN]     = {NULL,     NULL,      PREC_NONE},
-    [TOKEN_LEFT_BRACKET]    = {NULL,     subscript, PREC_CALL}, 
+    [TOKEN_LEFT_BRACKET]    = {array,    subscript, PREC_CALL}, 
     [TOKEN_RIGHT_BRACKET]   = {NULL,     NULL,      PREC_NONE},
     [TOKEN_LEFT_BRACE]      = {NULL,     NULL,      PREC_NONE},
     [TOKEN_RIGHT_BRACE]     = {NULL,     NULL,      PREC_NONE},

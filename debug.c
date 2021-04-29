@@ -222,6 +222,8 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return byteInstruction("OP_SUBSCRIPT", chunk, offset);
         case OP_SUBSCRIPT_ASSIGN:
             return byteInstruction("OP_SUBSCRIPT_ASSIGN", chunk, offset);
+        case OP_NEW_ARRAY:
+            return byteInstruction("OP_NEW_ARRAY", chunk, offset);
 
         case OP_CLASS:
             return constantInstruction("OP_CLASS", chunk, offset);

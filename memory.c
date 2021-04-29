@@ -121,6 +121,10 @@ static void blackenObject(Obj* object) {
             markValue(((ObjUpvalue*)object)->closed);
             break;
 
+        case OBJ_ARRAY:
+            markArray(&((ObjArray*)object)->array);
+            break;
+
         default:
             break; // Unreachable
     }
@@ -168,6 +172,10 @@ static void freeObject(Obj* object) {
             FREE(ObjNative, object);
             break;
 
+        case OBJ_UPVALUE:
+            FREE(ObjUpvalue, object);
+            break;
+
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
             FREE_ARRAY(char, string->chars, string->length + 1);
@@ -175,9 +183,11 @@ static void freeObject(Obj* object) {
             break;
         }
 
-        case OBJ_UPVALUE:
-            FREE(ObjUpvalue, object);
-            break;
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            freeValueArray(&array->array);
+            FREE(ObjArray, object);
+        }
     }
 }
 

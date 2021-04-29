@@ -132,6 +132,15 @@ ObjUpvalue* newUpvalue(Value* slot) {
     return upvalue;
 }
 
+ObjArray* newArray(int count) {
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+    initValueArray(&array->array);
+    array->array.capacity = count;
+    array->array.count = count;
+    array->array.values = GROW_ARRAY(Value, array->array.values, 0, count);
+    return array;
+}
+
 static int stringifyFunction(char** result, ObjFunction* function) {
     if (function->name == NULL) {
         return asprintf(result, "<script>");
@@ -161,10 +170,14 @@ int stringifyObject(char** result, Value value) {
         case OBJ_NATIVE:
             return asprintf(result, "<native fun>");
             break;
-        case OBJ_STRING:
-            return asprintf(result, "%s", AS_CSTRING(value));
         case OBJ_UPVALUE:
             return asprintf(result, "upvalue");
+        case OBJ_STRING:
+            return asprintf(result, "%s", AS_CSTRING(value));
+        case OBJ_ARRAY: {
+            ValueArray array = AS_ARRAY(value);
+            return asprintf(result, "<array of length %d>", array.count);
+        }
     }
     return -1;
 }

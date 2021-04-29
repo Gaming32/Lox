@@ -1,7 +1,12 @@
-var mystring = "hello";
+var myArray = [1, 5, "hello", fun(a, b) { return a + b; }];
 
-print mystring;
-for (var i = 0; i < 5; i = i + 1) {
-    print mystring[i];
+print myArray;
+for (var i = 0; i < size(myArray); i = i + 1) {
+    print i + ": " + myArray[i];
 }
-mystring[2] = "e";
+
+print myArray[3](3, 5);
+myArray[3] = 98484984;
+for (var i = 0; i < size(myArray); i = i + 1) {
+    print i + ": " + myArray[i];
+}

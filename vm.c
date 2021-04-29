@@ -167,29 +167,50 @@ static bool callValue(Value callee, int argCount) {
     return false;
 }
 
+static inline int getSingleIntegerIndex(Value* args, int argCount, int length) {
+    if (argCount != 1) {
+        runtimeError("More than one argument passed to string subscript.");
+        return -1;
+    }
+    if (!IS_NUMBER(args[0])) {
+        runtimeError("Non-number subscript of string.");
+        return -1;
+    }
+    int index = (long)AS_NUMBER(args[0]);
+    if (index < 0 || index >= length) {
+        runtimeError("String index out-of-range.");
+        return -1;
+    }
+    return index;
+}
+
+#define SUBSCR_EXIT (vm.stackTop -= argCount + 1)
 static bool subscriptValue(Value callee, int argCount) {
     Value* args = vm.stackTop - argCount;
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
             case OBJ_STRING: {
-                if (argCount != 1) {
-                    runtimeError("More than one argument passed to string subscript.");
-                    return false;
-                }
-                if (!IS_NUMBER(peek(0))) {
-                    runtimeError("Non-number subscript of string.");
-                    return false;
-                }
-                long index = (long)AS_NUMBER(args[0]);
-                if (index < 0 || index >= AS_STRING(callee)->length) {
-                    runtimeError("String index out-of-range.");
+                int index = getSingleIntegerIndex(args, argCount, AS_STRING(callee)->length);
+                if (index == -1) {
+                    SUBSCR_EXIT;
                     return false;
                 }
                 char* result = malloc(2 * sizeof(char));
                 result[0] = AS_CSTRING(callee)[index];
                 result[1] = '\0';
-                vm.stackTop -= argCount + 1;
+                SUBSCR_EXIT;
                 push(OBJ_VAL(takeString(result, 1)));
+                return true;
+            }
+
+            case OBJ_ARRAY: {
+                int index = getSingleIntegerIndex(args, argCount, AS_ARRAY(callee).count);
+                if (index == -1) {
+                    SUBSCR_EXIT;
+                    return false;
+                }
+                SUBSCR_EXIT;
+                push(AS_ARRAY(callee).values[index]);
                 return true;
             }
 
@@ -207,6 +228,18 @@ static bool subscriptAssign(Value callee, int argCount, Value newValue) {
     Value* args = vm.stackTop - argCount;
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_ARRAY: {
+                int index = getSingleIntegerIndex(args, argCount, AS_ARRAY(callee).count);
+                if (index == -1) {
+                    SUBSCR_EXIT;
+                    return false;
+                }
+                SUBSCR_EXIT;
+                AS_ARRAY(callee).values[index] = newValue;
+                push(newValue);
+                return true;
+            }
+
             default:
                 // Non-subscriptable object type
                 break;
@@ -216,6 +249,7 @@ static bool subscriptAssign(Value callee, int argCount, Value newValue) {
     runtimeError("Can only subscript assign to arrays and tables.");
     return false;
 }
+#undef SUBSCR_EXIT
 
 static bool invokeFromClass(ObjClass* klass, ObjString* name, int argCount) {
     Value method;
@@ -765,6 +799,15 @@ static InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            case OP_NEW_ARRAY: {
+                int argCount = READ_BYTE();
+                ObjArray* array = newArray(argCount);
+                for (Value* i = array->array.values + argCount; i > array->array.values; i--) {
+                    i[-1] = pop();
+                }
+                push(OBJ_VAL(array));
                 break;
             }
 
