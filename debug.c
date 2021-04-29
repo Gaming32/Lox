@@ -218,6 +218,11 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_RETURN_NIL:
             return simpleInstruction("OP_RETURN_NIL", offset);
 
+        case OP_SUBSCRIPT:
+            return byteInstruction("OP_SUBSCRIPT", chunk, offset);
+        case OP_SUBSCRIPT_ASSIGN:
+            return byteInstruction("OP_SUBSCRIPT_ASSIGN", chunk, offset);
+
         case OP_CLASS:
             return constantInstruction("OP_CLASS", chunk, offset);
         case OP_CLASS_LONG:

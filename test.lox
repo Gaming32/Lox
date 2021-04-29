@@ -1,55 +1,7 @@
-// class MacAddress {
-//     init(mac) {
-//         this.mac = mac;
-//     }
-//     display(prefix) {
-//         print prefix + " " + this.mac;
-//     }
-// }
+var mystring = "hello";
 
-// print MacAddress;
-// var myaddr = MacAddress("001122334455");
-// print myaddr;
-
-
-// class Doughnut {
-//     cook() {
-//         print "Dunk in the fryer.";
-//         this.finish("sprinkles");
-//     }
-
-//     finish(ingredient) {
-//         print "Finish with " + ingredient;
-//     }
-// }
-
-// class Cruller < Doughnut {
-//     finish(ingredient) {
-//         // No sprinkles, always icing.
-//         super.finish("icing");
-//     }
-// }
-
-// var food = Cruller();
-// food.cook();
-
-
-class A {
-    method() {
-        print "A method";
-    }
+print mystring;
+for (var i = 0; i < 5; i = i + 1) {
+    print mystring[i];
 }
-
-class B < A {
-    method() {
-        print "B method";
-    }
-
-    test() {
-        super.method();
-    }
-}
-
-class C < B {}
-
-C().test();
+mystring[2] = "e";

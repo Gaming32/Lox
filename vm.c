@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "common.h"
 #include "errors.h"
@@ -163,6 +164,56 @@ static bool callValue(Value callee, int argCount) {
     }
 
     runtimeError("Can only call functions and classes.");
+    return false;
+}
+
+static bool subscriptValue(Value callee, int argCount) {
+    Value* args = vm.stackTop - argCount;
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+            case OBJ_STRING: {
+                if (argCount != 1) {
+                    runtimeError("More than one argument passed to string subscript.");
+                    return false;
+                }
+                if (!IS_NUMBER(peek(0))) {
+                    runtimeError("Non-number subscript of string.");
+                    return false;
+                }
+                long index = (long)AS_NUMBER(args[0]);
+                if (index < 0 || index >= AS_STRING(callee)->length) {
+                    runtimeError("String index out-of-range.");
+                    return false;
+                }
+                char* result = malloc(2 * sizeof(char));
+                result[0] = AS_CSTRING(callee)[index];
+                result[1] = '\0';
+                vm.stackTop -= argCount + 1;
+                push(OBJ_VAL(takeString(result, 1)));
+                return true;
+            }
+
+            default:
+                // Non-subscriptable object type
+                break;
+        }
+    }
+
+    runtimeError("Can only subscript strings, arrays, and tables.");
+    return false;
+}
+
+static bool subscriptAssign(Value callee, int argCount, Value newValue) {
+    Value* args = vm.stackTop - argCount;
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+            default:
+                // Non-subscriptable object type
+                break;
+        }
+    }
+
+    runtimeError("Can only subscript assign to arrays and tables.");
     return false;
 }
 
@@ -695,6 +746,24 @@ static InterpretResult run() {
                 vm.stackTop = frame->slots;
                 push(NIL_VAL);
 
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+
+            case OP_SUBSCRIPT: {
+                int argCount = READ_BYTE();
+                if (!subscriptValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
+            }
+            case OP_SUBSCRIPT_ASSIGN: {
+                int argCount = READ_BYTE();
+                Value newValue = pop();
+                if (!subscriptAssign(peek(argCount), argCount, newValue)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 frame = &vm.frames[vm.frameCount - 1];
                 break;
             }

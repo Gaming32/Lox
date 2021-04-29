@@ -69,6 +69,9 @@ typedef enum {
     OP_RETURN,
     OP_RETURN_NIL,
 
+    OP_SUBSCRIPT,
+    OP_SUBSCRIPT_ASSIGN,
+
     OP_CLASS,
     OP_CLASS_LONG,
     OP_INHERIT,
