@@ -1,12 +1,20 @@
-var myArray = [1, 5, "hello", fun(a, b) { return a + b; }];
+// var myArray = [1, 5, "hello", fun(a, b) { return a + b; }];
 
-print myArray;
-for (var i = 0; i < size(myArray); i = i + 1) {
-    print i + ": " + myArray[i];
-}
+var myn2;
+(myn2 = fun(a, b) {
+    var fn = fun(b) {
+        return b * b;
+    };
+    return a * fn(b);
+})(1, 2);
 
-print myArray[3](3, 5);
-myArray[3] = 98484984;
-for (var i = 0; i < size(myArray); i = i + 1) {
-    print i + ": " + myArray[i];
-}
+// print myArray;
+// for (var i = 0; i < size(myArray); i = i + 1) {
+//     print i + ": " + myArray[i];
+// }
+
+// print myArray[3](3, 5);
+// myArray[3] = 98484984;
+// for (var i = 0; i < size(myArray); i = i + 1) {
+//     print i + ": " + myArray[i];
+// }

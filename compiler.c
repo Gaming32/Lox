@@ -517,40 +517,39 @@ static void grouping(bool canAssign) {
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
-static void traceVariableName(char** output) {
-    int nameLength = 12;
-    Compiler* trace = current;
-    while (trace != NULL) {
-        nameLength += trace->function->name == NULL ? 8 : trace->function->name->length;
-        nameLength++;
-        trace = trace->enclosing;
-    }
-    trace = current;
-    char* result = malloc(nameLength);
-    char* currentResult = result + 12;
-    strcpy(result, ">suomynona<.");
-    while (trace != NULL) {
-        if (trace->function->name == NULL) {
-            memcpy(currentResult, ">tpircs<", 8);
-            currentResult += 8;
-        } else {
-            int length = trace->function->name->length;
-            revmemcpy(currentResult, trace->function->name->chars, length);
-            currentResult += length;
-        }
-        trace = trace->enclosing;
-        if (trace != NULL) {
-            *currentResult++ = '.';
-        }
-    }
-    for (char *i = result, *j = currentResult - 1; i < j; i++, j--) {
-        char tmp = *i;
-        *i = *j;
-        *j = tmp;
-    }
-    *currentResult = '\0';
-    *output = result;
-}
+// static void traceVariableName(char** output) {
+//     int nameLength = 0;
+//     Compiler* trace = current;
+//     while (trace != NULL) {
+//         nameLength += trace->function->name == NULL ? 8 : trace->function->name->length;
+//         nameLength++;
+//         trace = trace->enclosing;
+//     }
+//     trace = current;
+//     char* result = malloc(nameLength);
+//     char* currentResult = result;
+//     while (trace != NULL) {
+//         if (trace->function->name == NULL) {
+//             memcpy(currentResult, ">tpircs<", 8);
+//             currentResult += 8;
+//         } else {
+//             int length = trace->function->name->length;
+//             revmemcpy(currentResult, trace->function->name->chars, length);
+//             currentResult += length;
+//         }
+//         trace = trace->enclosing;
+//         if (trace != NULL) {
+//             *currentResult++ = '.';
+//         }
+//     }
+//     for (char *i = result, *j = currentResult - 1; i < j; i++, j--) {
+//         char tmp = *i;
+//         *i = *j;
+//         *j = tmp;
+//     }
+//     *currentResult = '\0';
+//     *output = result;
+// }
 
 static Token syntheticToken(const char* text) {
     Token token;
@@ -560,8 +559,11 @@ static Token syntheticToken(const char* text) {
 }
 
 static void lambda(bool canAssign) {
-    char* name;
-    traceVariableName(&name);
+    int parentNameLength = current->function->name == NULL ? 8 : current->function->name->length;
+    char* name = malloc(parentNameLength + 13);
+    memcpy(name, current->function->name == NULL ? "<script>" : current->function->name->chars, parentNameLength);
+    memcpy(name + parentNameLength, ".<anonymous>", 12);
+    name[parentNameLength + 12] = '\0';
     parser.previous = syntheticToken(name);
     function(TYPE_FUNCTION);
     free(name);
