@@ -27,3 +27,12 @@ int asprintf(char **strp, const char *fmt, ...) {
     va_end(ap);
     return r;
 }
+
+void* revmemcpy(void *dest, const void *src, size_t len)
+{
+    char *d = (char*)dest + len - 1;
+    const char *s = src;
+    while (len--)
+        *d-- = *s++;
+    return dest;
+}

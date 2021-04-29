@@ -8,5 +8,6 @@
 
 uint16_t decode16pointer(uint8_t* ptr);
 int asprintf(char **strp, const char *fmt, ...);
+void* revmemcpy(void *dest, const void *src, size_t len);
 
 #endif

@@ -8,6 +8,7 @@
 #include "compiler.h"
 #include "memory.h"
 #include "scanner.h"
+#include "utils.h"
 
 #ifdef DEBUG_PRINT_CODE
     #include "debug.h"
@@ -516,8 +517,54 @@ static void grouping(bool canAssign) {
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
+static void traceVariableName(char** output) {
+    int nameLength = 12;
+    Compiler* trace = current;
+    while (trace != NULL) {
+        nameLength += trace->function->name == NULL ? 8 : trace->function->name->length;
+        nameLength++;
+        trace = trace->enclosing;
+    }
+    trace = current;
+    char* result = malloc(nameLength);
+    char* currentResult = result + 12;
+    strcpy(result, ">suomynona<.");
+    while (trace != NULL) {
+        if (trace->function->name == NULL) {
+            memcpy(currentResult, ">tpircs<", 8);
+            currentResult += 8;
+        } else {
+            int length = trace->function->name->length;
+            revmemcpy(currentResult, trace->function->name->chars, length);
+            currentResult += length;
+        }
+        trace = trace->enclosing;
+        if (trace != NULL) {
+            *currentResult++ = '.';
+        }
+    }
+    for (char *i = result, *j = currentResult - 1; i < j; i++, j--) {
+        char tmp = *i;
+        *i = *j;
+        *j = tmp;
+    }
+    *currentResult = '\0';
+    *output = result;
+}
+
+static Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
+}
+
 static void lambda(bool canAssign) {
+    char* name;
+    traceVariableName(&name);
+    parser.previous = syntheticToken(name);
     function(TYPE_FUNCTION);
+    free(name);
 }
 
 static void number(bool canAssign) {
@@ -577,13 +624,6 @@ static void namedVariable(Token name, bool canAssign) {
 
 static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
-}
-
-static Token syntheticToken(const char* text) {
-    Token token;
-    token.start = text;
-    token.length = (int)strlen(text);
-    return token;
 }
 
 static void super_(bool canAssign) {
